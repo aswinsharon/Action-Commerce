@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Build files
+dist/
+build/
+
+# OS & IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Database or dump files
+*.sqlite
+*.dump
+
+# Local debug & runtime
+*.pid
+*.seed
+
+# Files
+
+package-lock.json
