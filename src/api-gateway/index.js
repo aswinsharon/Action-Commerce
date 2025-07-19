@@ -6,6 +6,7 @@ const server = express();
 const proxy = http.createProxyServer();
 
 server.use(express.json());
+server.use(express.urlencoded({ extended: true }))
 server.use(cors());
 
 app.use("/products", (req, res) => {

@@ -1,0 +1,119 @@
+{
+    "id": "5c411952-3985-4e6f-9c84-60d3c24ed3a1",
+    "productId": "48cc2295-e5c8-4dfe-840b-4f1356e68097",
+    "name": {
+        "en": "Dress",
+        "de": "Dress",
+        "de-DE": "Dress",
+        "en-US": "Dress"
+    },
+    "productType": {
+        "typeId": "product-type",
+        "id": "7fe70d2e-1537-4a65-ba12-48052b3066e9",
+        "version": 1
+    },
+    "productSlug": {
+        "en": "SKU-W52",
+        "de-DE": "SKU-W52",
+        "en-US": "SKU-W52"
+    },
+    "variant": {
+        "id": 1,
+        "sku": "SKU-W52",
+        "prices": [
+            {
+                "id": "49c20b21-1440-4f61-94f8-ff1883d39cfb",
+                "value": {
+                    "type": "centPrecision",
+                    "currencyCode": "USD",
+                    "centAmount": 9460,
+                    "fractionDigits": 2
+                },
+                "country": "US"
+            },
+            {
+                "id": "6fe2048e-79d4-4223-9cf0-ea440307a495",
+                "value": {
+                    "type": "centPrecision",
+                    "currencyCode": "EUR",
+                    "centAmount": 4550,
+                    "fractionDigits": 2
+                },
+                "country": "DE"
+            }
+        ],
+        "images": [
+            {
+                "url": "https://th.bing.com/th/id/OIP.xP20EfW1OxvrVc2roj5hgwHaHa?rs=1&pid=ImgDetMain",
+                "dimensions": {
+                    "w": 300,
+                    "h": 375
+                }
+            }
+        ],
+        "attributes": [],
+        "assets": []
+    },
+    "price": {
+        "id": "49c20b21-1440-4f61-94f8-ff1883d39cfb",
+        "value": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 9460,
+            "fractionDigits": 2
+        },
+        "country": "US"
+    },
+    "quantity": 1,
+    "taxRate": {
+        "name": "test-tax-category",
+        "amount": 0.2,
+        "includedInPrice": true,
+        "country": "US",
+        "id": "HHLJRvE9",
+        "subRates": []
+    },
+    "addedAt": "2025-05-28T13:08:52.449Z",
+    "lastModifiedAt": "2025-05-28T13:08:52.449Z",
+    "priceMode": "Platform",
+    "lineItemMode": "Standard",
+    "totalPrice": {
+        "type": "centPrecision",
+        "currencyCode": "USD",
+        "centAmount": 9460,
+        "fractionDigits": 2
+    },
+    "taxedPrice": {
+        "totalNet": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 7883,
+            "fractionDigits": 2
+        },
+        "totalGross": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 9460,
+            "fractionDigits": 2
+        },
+        "taxPortions": [
+            {
+                "rate": 0.2,
+                "amount": {
+                    "type": "centPrecision",
+                    "currencyCode": "USD",
+                    "centAmount": 1577,
+                    "fractionDigits": 2
+                },
+                "name": "test-tax-category"
+            }
+        ],
+        "totalTax": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 1577,
+            "fractionDigits": 2
+        }
+    },
+    "taxedPricePortions": []
+}

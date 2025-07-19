@@ -1,0 +1,334 @@
+{
+    "type": "Cart",
+    id: "9c054cc1-4f91-4f3d-8b2f-d37ada448b36",
+    version: 15,
+    versionModifiedAt: "2025-05-28T13:09:43.794Z",
+    lastMessageSequenceNumber: 1,
+    createdAt: "2025-05-28T13:08:52.111Z",
+    lastModifiedAt: "2025-05-28T13:09:43.794Z",
+    lastModifiedBy: {
+        clientId: "ClKSqi1W4oIpuCSNLE0RMDH7",
+        isPlatformClient: false,
+        anonymousId: "1f93f788-42a9-4f4e-8832-9b546f7ffe1a"
+    },
+    createdBy: {
+        clientId: "ClKSqi1W4oIpuCSNLE0RMDH7",
+        isPlatformClient: false,
+        anonymousId: "1f93f788-42a9-4f4e-8832-9b546f7ffe1a"
+    },
+    anonymousId: "1f93f788-42a9-4f4e-8832-9b546f7ffe1a",
+    locale: "en",
+    lineItems: [
+        {
+            id: "5c411952-3985-4e6f-9c84-60d3c24ed3a1",
+            productId: "48cc2295-e5c8-4dfe-840b-4f1356e68097",
+            name: {
+                "en": "Dress",
+                "de": "Dress",
+                "de-DE": "Dress",
+                "en-US": "Dress"
+            },
+            productType: {
+                typeId: "product-type",
+                id: "7fe70d2e-1537-4a65-ba12-48052b3066e9",
+                version: 1
+            },
+            productSlug: {
+                "en": "SKU-W52",
+                "de-DE": "SKU-W52",
+                "en-US": "SKU-W52"
+            },
+            variant: {
+                id: 1,
+                sku: "SKU-W52",
+                prices: [
+                    {
+                        id: "49c20b21-1440-4f61-94f8-ff1883d39cfb",
+                        value: {
+                            type: "centPrecision",
+                            currencyCode: "USD",
+                            centAmount: 9460,
+                            fractionDigits: 2
+                        },
+                        country: "US"
+                    },
+                    {
+                        id: "6fe2048e-79d4-4223-9cf0-ea440307a495",
+                        value: {
+                            type: "centPrecision",
+                            currencyCode: "EUR",
+                            centAmount: 4550,
+                            fractionDigits: 2
+                        },
+                        country: "DE"
+                    }
+                ],
+                images: [
+                    {
+                        url: "https://th.bing.com/th/id/OIP.xP20EfW1OxvrVc2roj5hgwHaHa?rs=1&pid=ImgDetMain",
+                        dimensions: {
+                            w: 300,
+                            h: 375
+                        }
+                    }
+                ],
+                attributes: [],
+                assets: []
+            },
+            price: {
+                id: "49c20b21-1440-4f61-94f8-ff1883d39cfb",
+                value: {
+                    type: "centPrecision",
+                    currencyCode: "USD",
+                    centAmount: 9460,
+                    fractionDigits: 2
+                },
+                country: "US"
+            },
+            quantity: 1,
+            discountedPricePerQuantity: [],
+            taxRate: {
+                name: "test-tax-category",
+                amount: 0.2,
+                includedInPrice: true,
+                country: "US",
+                id: "HHLJRvE9",
+                subRates: []
+            },
+            perMethodTaxRate: [],
+            addedAt: "2025-05-28T13:08:52.449Z",
+            lastModifiedAt: "2025-05-28T13:08:52.449Z",
+            state: [
+                {
+                    "quantity": 1,
+                    "state": {
+                        "typeId": "state",
+                        "id": "34c13bc4-6bb6-4f83-87e9-a71c471e8124"
+                    }
+                }
+            ],
+            "priceMode": "Platform",
+            "lineItemMode": "Standard",
+            "totalPrice": {
+                "type": "centPrecision",
+                "currencyCode": "USD",
+                "centAmount": 9460,
+                "fractionDigits": 2
+            },
+            "taxedPrice": {
+                "totalNet": {
+                    "type": "centPrecision",
+                    "currencyCode": "USD",
+                    "centAmount": 7883,
+                    "fractionDigits": 2
+                },
+                "totalGross": {
+                    "type": "centPrecision",
+                    "currencyCode": "USD",
+                    "centAmount": 9460,
+                    "fractionDigits": 2
+                },
+                "taxPortions": [
+                    {
+                        "rate": 0.2,
+                        "amount": {
+                            "type": "centPrecision",
+                            "currencyCode": "USD",
+                            "centAmount": 1577,
+                            "fractionDigits": 2
+                        },
+                        "name": "test-tax-category"
+                    }
+                ],
+                "totalTax": {
+                    "type": "centPrecision",
+                    "currencyCode": "USD",
+                    "centAmount": 1577,
+                    "fractionDigits": 2
+                }
+            },
+            "taxedPricePortions": []
+        }
+    ],
+    "cartState": "Active",
+    "totalPrice": {
+        "type": "centPrecision",
+        "currencyCode": "USD",
+        "centAmount": 10450,
+        "fractionDigits": 2
+    },
+    "taxedPrice": {
+        "totalNet": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 8708,
+            "fractionDigits": 2
+        },
+        "totalGross": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 10450,
+            "fractionDigits": 2
+        },
+        "taxPortions": [
+            {
+                "rate": 0.2,
+                "amount": {
+                    "type": "centPrecision",
+                    "currencyCode": "USD",
+                    "centAmount": 1742,
+                    "fractionDigits": 2
+                },
+                "name": "test-tax-category"
+            }
+        ],
+        "totalTax": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 1742,
+            "fractionDigits": 2
+        }
+    },
+    "country": "US",
+    "taxedShippingPrice": {
+        "totalNet": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 825,
+            "fractionDigits": 2
+        },
+        "totalGross": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 990,
+            "fractionDigits": 2
+        },
+        "taxPortions": [
+            {
+                "rate": 0.2,
+                "amount": {
+                    "type": "centPrecision",
+                    "currencyCode": "USD",
+                    "centAmount": 165,
+                    "fractionDigits": 2
+                },
+                "name": "test-tax-category"
+            }
+        ],
+        "totalTax": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 165,
+            "fractionDigits": 2
+        }
+    },
+    "shippingMode": "Single",
+    "shippingInfo": {
+        "shippingMethodName": "DHL",
+        "price": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 990,
+            "fractionDigits": 2
+        },
+        "shippingRate": {
+            "price": {
+                "type": "centPrecision",
+                "currencyCode": "USD",
+                "centAmount": 990,
+                "fractionDigits": 2
+            },
+            "tiers": []
+        },
+        "taxRate": {
+            "name": "test-tax-category",
+            "amount": 0.2,
+            "includedInPrice": true,
+            "country": "US",
+            "id": "HHLJRvE9",
+            "subRates": []
+        },
+        "taxCategory": {
+            "typeId": "tax-category",
+            "id": "5fc0cd72-d76a-47d8-9ec2-04b700e1ac5c"
+        },
+        "deliveries": [],
+        "shippingMethod": {
+            "typeId": "shipping-method",
+            "id": "9d98ffea-42e0-441a-9116-9c347e98592f"
+        },
+        "taxedPrice": {
+            "totalNet": {
+                "type": "centPrecision",
+                "currencyCode": "USD",
+                "centAmount": 825,
+                "fractionDigits": 2
+            },
+            "totalGross": {
+                "type": "centPrecision",
+                "currencyCode": "USD",
+                "centAmount": 990,
+                "fractionDigits": 2
+            },
+            "taxPortions": [
+                {
+                    "rate": 0.2,
+                    "amount": {
+                        "type": "centPrecision",
+                        "currencyCode": "USD",
+                        "centAmount": 165,
+                        "fractionDigits": 2
+                    },
+                    "name": "test-tax-category"
+                }
+            ],
+            "totalTax": {
+                "type": "centPrecision",
+                "currencyCode": "USD",
+                "centAmount": 165,
+                "fractionDigits": 2
+            }
+        },
+        "shippingMethodState": "MatchesCart"
+    },
+    "shippingAddress": {
+        "firstName": "test",
+        "lastName": "t",
+        "streetName": "1295 Charleston Road, 7th Lane",
+        "additionalStreetInfo": "",
+        "postalCode": "94043",
+        "city": "Mountain view",
+        "region": "CA",
+        "country": "US",
+        "phone": "9823454321",
+        "email": "test@gmail.com"
+    },
+    "shipping": [],
+    "customLineItems": [],
+    "discountCodes": [],
+    "directDiscounts": [],
+    "inventoryMode": "None",
+    "taxMode": "Platform",
+    "taxRoundingMode": "HalfEven",
+    "taxCalculationMode": "LineItemLevel",
+    "deleteDaysAfterLastModification": 90,
+    "refusedGifts": [],
+    "origin": "Customer",
+    "billingAddress": {
+        "firstName": "test",
+        "lastName": "t",
+        "streetName": "1295 Charleston Road, 7th Lane",
+        "additionalStreetInfo": "",
+        "postalCode": "94043",
+        "city": "Mountain view",
+        "region": "CA",
+        "country": "US",
+        "phone": "9823454321",
+        "email": "test@gmail.com"
+    },
+    "itemShippingAddresses": [],
+    "discountTypeCombination": {
+        "type": "Stacking"
+    },
+    "totalLineItemQuantity": 1
+};

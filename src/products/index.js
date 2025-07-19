@@ -4,8 +4,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/carts', routes);
+app.use('products', router);
 
-app.listen(6002, () => {
-    console.log("carts server started");
-});
+app.listen(6003, () => {
+    console.log('server started');
+})
