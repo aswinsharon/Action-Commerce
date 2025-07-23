@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const lineItemSchema = new mongoose.Schema({
+const { Schema } = require('mongoose');
+
+const lineItemSchema = new Schema({
     id: {
         type: String,
         required: true,
