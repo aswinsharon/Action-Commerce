@@ -24,9 +24,11 @@ const throwError = ({ ctx, msg, code, type, data, err }) => {
     if (err) {
         data.errorObject = errorParser(err);
     }
-}
 
-const buildbaseCreateBody = ({ version = 1, clientId, data = {} }) => {
+};
+
+const buildbaseCreateBody = ({ version = 1, clientId, data }) => {
+    console.log('data--->', data);
     const now = new Date().toISOString();
     const _id = uuidv4();
     return {

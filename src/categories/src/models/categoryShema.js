@@ -1,10 +1,11 @@
 const { Schema, default: mongoose } = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 
 const categoryShema = new Schema({
-    id: {
+    _id: {
         type: String,
-        required: true,
-        unique: true
+        default: uuidv4,
+        required: true
     },
     version: {
         type: Number,
@@ -47,8 +48,12 @@ const categoryShema = new Schema({
         type: Map,
         of: String,
         required: true
+    },
+},
+    {
+        versionKey: false, // disables __v(versioning)
     }
-});
+);
 
 const category = mongoose.model('category', categoryShema);
 

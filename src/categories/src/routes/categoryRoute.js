@@ -16,7 +16,7 @@ const router = express.Router();
  * @returns {Array<Object>} 200 - An array of category objects
  * @returns {Error} 500 - Internal server error
  */
-router.get('/', categoryController.getCategories);
+// router.get('/', categoryController.getCategories);
 
 /**
  * GET /:cartegoryId
@@ -27,7 +27,7 @@ router.get('/', categoryController.getCategories);
  * @returns {Object} 200 - Category object
  * @returns {Error} 404 - Category not found
  */
-router.get('/:cartegoryId', categoryController.getCategoryById);
+// router.get('/:cartegoryId', categoryController.getCategoryById);
 
 /**
  * POST /
@@ -50,7 +50,7 @@ router.post('/', categoryController.createCategory);
  * @returns {Object} 200 - Updated category object
  * @returns {Error} 404 - Category not found
  */
-router.post('/:cartegoryId', categoryController.updateCategory);
+// router.post('/:cartegoryId', categoryController.updateCategory);
 
 /**
  * DELETE /:cartegoryId
@@ -61,7 +61,7 @@ router.post('/:cartegoryId', categoryController.updateCategory);
  * @returns {string} 200 - Success message
  * @returns {Error} 404 - Category not found
  */
-router.delete('/:cartegoryId', categoryController.deleteCategoryById);
+// router.delete('/:cartegoryId', categoryController.deleteCategoryById);
 
 /**
  * HEAD /
@@ -70,7 +70,7 @@ router.delete('/:cartegoryId', categoryController.deleteCategoryById);
  * @route HEAD /categories
  * @returns {Headers} 200 - Headers indicating resource metadata
  */
-router.head('/', categoryController.headCategories);
+// router.head('/', categoryController.headCategories);
 
 /**
  * HEAD /:cartegoryId
@@ -81,6 +81,6 @@ router.head('/', categoryController.headCategories);
  * @returns {Headers} 200 - Headers indicating resource metadata
  * @returns {Error} 404 - Category not found
  */
-router.head('/:cartegoryId', categoryController.headCategoriesById);
+// router.head('/:cartegoryId', categoryController.headCategoriesById);
 
 module.exports = router;

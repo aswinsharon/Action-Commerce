@@ -1,13 +1,12 @@
 const mongoose = require("mongoose");
-import { EventEmitter } from "events";
+const { EventEmitter } = require("events");
 
 const MONGO_URI = 'mongodb://127.0.0.1:27017/ms_action_categories_db';
 
 class DatabaseConfig extends EventEmitter {
     RETRY_COUNT = 1;
     MAX_COUNT = 3;
-
-    private dbConnection = null;
+    dbConnection = null;
 
     connect = async () => {
         const options = {
@@ -33,11 +32,11 @@ class DatabaseConfig extends EventEmitter {
         }
     };
 
-    private isNetworkError(error) {
+    isNetworkError(error) {
         return error?.code === "ETIMEOUT";
     }
 
-    private async closeConnection() {
+    async closeConnection() {
         if (this.dbConnection) {
             await this.dbConnection.close();
             this.dbConnection = null;
