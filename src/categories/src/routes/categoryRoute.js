@@ -16,7 +16,7 @@ const router = express.Router();
  * @returns {Array<Object>} 200 - An array of category objects
  * @returns {Error} 500 - Internal server error
  */
-// router.get('/', categoryController.getCategories);
+router.get('/', categoryController.getCategories);
 
 /**
  * GET /:cartegoryId

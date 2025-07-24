@@ -28,7 +28,6 @@ const throwError = ({ ctx, msg, code, type, data, err }) => {
 };
 
 const buildbaseCreateBody = ({ version = 1, clientId, data }) => {
-    console.log('data--->', data);
     const now = new Date().toISOString();
     const _id = uuidv4();
     return {
@@ -46,8 +45,21 @@ const buildbaseCreateBody = ({ version = 1, clientId, data }) => {
         },
         ...data
     };
-}
+};
+
+const paginate = async (model, query = {}, limit = 20, offset = 0, projection = null, options = {}) => {
+    const results = await model.find(query, projection, options).skip(offset).limit(limit);
+    const total = await model.countDocuments(query);
+    return {
+        limit,
+        offset,
+        count: results.length,
+        total,
+        results,
+    };
+};
 
 module.exports = {
-    buildbaseCreateBody
+    buildbaseCreateBody,
+    paginate
 }
