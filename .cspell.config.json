@@ -1,0 +1,25 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "dictionaries": ["typescript", "node"],
+  "words": [
+    "ctx",    
+    "mongoose",
+    "mongodb",
+    "res", "req",
+    "dtos",
+    "ETIMEOUT",
+    "uuidv4",
+    "buildbaseCreateBody"
+  ],
+  "ignorePaths": [
+    "**/node_modules",
+    "**/dist",
+    "**/*.log",
+    "**/coverage"
+  ],
+  "ignoreWords": [
+    "dontcheckme"
+  ],
+  "enableFiletypes": [".js", ".ts", ".json"]
+}

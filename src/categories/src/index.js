@@ -1,6 +1,6 @@
 const express = require('express');
-const route = require('./routes/categoryRoute');
-const databaseConfig = require('../src/config/databaseConfig')
+const route = require('./routes/category.route');
+const databaseConfig = require('./config/database.config')
 const app = express();
 
 app.use(express.json());

@@ -47,19 +47,18 @@ const buildbaseCreateBody = ({ version = 1, clientId, data }) => {
     };
 };
 
-const paginate = async (model, query = {}, limit = 20, offset = 0, projection = null, options = {}) => {
-    const results = await model.find(query, projection, options).skip(offset).limit(limit);
-    const total = await model.countDocuments(query);
-    return {
-        limit,
-        offset,
-        count: results.length,
-        total,
-        results,
-    };
-};
+// const paginate = async (model, query = {}, limit = 20, offset = 0, projection = null, options = {}) => {
+//     const results = await model.find(query, projection, options).skip(offset).limit(limit);
+//     const total = await model.countDocuments(query);
+//     return {
+//         limit,
+//         offset,
+//         count: results.length,
+//         total,
+//         results,
+//     };
+// };
 
 module.exports = {
-    buildbaseCreateBody,
-    paginate
+    buildbaseCreateBody
 }

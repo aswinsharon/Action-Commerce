@@ -1,7 +1,7 @@
 const { Schema, default: mongoose } = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
-const categoryShema = new Schema({
+const categorySchema = new Schema({
     _id: {
         type: String,
         default: uuidv4,
@@ -55,6 +55,6 @@ const categoryShema = new Schema({
     }
 );
 
-const category = mongoose.model('category', categoryShema);
+const category = mongoose.model('category', categorySchema);
 
 module.exports = category;

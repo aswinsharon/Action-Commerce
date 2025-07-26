@@ -5,7 +5,7 @@
  */
 
 const express = require('express');
-const categoryController = require('../controllers/categoryController');
+const categoryController = require('../controllers/category.controller');
 const router = express.Router();
 
 /**
@@ -16,18 +16,18 @@ const router = express.Router();
  * @returns {Array<Object>} 200 - An array of category objects
  * @returns {Error} 500 - Internal server error
  */
-router.get('/', categoryController.getCategories);
+router.get('/', categoryController.getAllCategories);
 
 /**
- * GET /:cartegoryId
+ * GET /:categoryId
  * Retrieves details of a single category by its ID.
  * 
- * @route GET /categories/:cartegoryId
- * @param {string} cartegoryId - ID of the category
+ * @route GET /categories/:categoryId
+ * @param {string} categoryId - ID of the category
  * @returns {Object} 200 - Category object
  * @returns {Error} 404 - Category not found
  */
-// router.get('/:cartegoryId', categoryController.getCategoryById);
+router.get('/:categoryId', categoryController.getCategoryById);
 
 /**
  * POST /
@@ -41,27 +41,38 @@ router.get('/', categoryController.getCategories);
 router.post('/', categoryController.createCategory);
 
 /**
- * POST /:cartegoryId
+ * POST /:categoryId
  * Updates an existing category by its ID.
  * 
- * @route POST /categories/:cartegoryId
- * @param {string} cartegoryId - ID of the category
+ * @route POST /categories/:categoryId
+ * @param {string} categoryId - ID of the category
  * @body {string} name - Updated name of the category
  * @returns {Object} 200 - Updated category object
  * @returns {Error} 404 - Category not found
  */
-// router.post('/:cartegoryId', categoryController.updateCategory);
+// router.post('/:categoryId', categoryController.updateCategory);
 
 /**
- * DELETE /:cartegoryId
+ * DELETE /:categoryId
  * Deletes a category by its ID.
  * 
- * @route DELETE /categories/:cartegoryId
- * @param {string} cartegoryId - ID of the category
+ * @route DELETE /categories/:categoryId
+ * @param {string} categoryId - ID of the category
  * @returns {string} 200 - Success message
  * @returns {Error} 404 - Category not found
  */
-// router.delete('/:cartegoryId', categoryController.deleteCategoryById);
+router.delete('/:categoryId', categoryController.deleteCategoryById);
+
+/**
+ * HEAD /:categoryId
+ * Sends metadata for a specific category.
+ * 
+ * @route HEAD /categories/:categoryId
+ * @param {string} categoryId - ID of the category
+ * @returns {Headers} 200 - Headers indicating resource metadata
+ * @returns {Error} 404 - Category not found
+ */
+router.head('/:categoryId', categoryController.headCategoryById);
 
 /**
  * HEAD /
@@ -70,17 +81,6 @@ router.post('/', categoryController.createCategory);
  * @route HEAD /categories
  * @returns {Headers} 200 - Headers indicating resource metadata
  */
-// router.head('/', categoryController.headCategories);
-
-/**
- * HEAD /:cartegoryId
- * Sends metadata for a specific category.
- * 
- * @route HEAD /categories/:cartegoryId
- * @param {string} cartegoryId - ID of the category
- * @returns {Headers} 200 - Headers indicating resource metadata
- * @returns {Error} 404 - Category not found
- */
-// router.head('/:cartegoryId', categoryController.headCategoriesById);
+router.head('/', categoryController.headCategories);
 
 module.exports = router;
