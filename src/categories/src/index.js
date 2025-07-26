@@ -1,12 +1,16 @@
 const express = require('express');
+const cors = require('cors');
 const route = require('./routes/category.route');
 const databaseConfig = require('./config/database.config')
+const errorHandler = require("./middlewares/errorHandler");
+
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-
 app.use('/categories', route);
+app.use(errorHandler);
 
 databaseConfig.on("connected", (_dbConnection) => {
     console.log("Event received: MongoDB connected successfully!");

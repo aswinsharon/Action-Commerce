@@ -9,14 +9,13 @@ const getAllCategories = async (request, response) => {
         const getCategoriesResponse = await categoryService.getAllCategories();
         return response.status(200).json(getCategoriesResponse);
     } catch (error) {
-        console.log(error)
-        return response.status(500).json(error);
+        next(error);
     }
 };
 
-const getCategoryById = async (request, response) => {
+const getCategoryById = async (request, response, next) => {
+    const { categoryId } = request.params;
     try {
-        const { categoryId } = request.params;
         const result = await categoryService.getCategoryById(categoryId);
         if (!result) {
             const errorResponse = new ErrorResponse(
@@ -29,8 +28,7 @@ const getCategoryById = async (request, response) => {
         const getCategoriesResponse = new CategoryResponse(result);
         return response.status(200).json(getCategoriesResponse);
     } catch (error) {
-        console.log(error);
-        return response.status(500).json(error);
+        next(error);
     }
 };
 
@@ -41,17 +39,22 @@ const createCategory = async (request, response) => {
         const createCategoryResponse = await categoryService.createCategory({ clientId, data });
         return response.status(201).json(createCategoryResponse);
     } catch (error) {
-        return response.status(500).json(error);
+        next(error);
     }
 };
 
 const deleteCategoryById = async (request, response) => {
-    const categoryId = request.id;
+    const { categoryId } = request.params;
     try {
         const deleteCategoryByIdResponse = await categoryService.deleteCategoryById(categoryId);
+        const errorResponse = new ErrorResponse(
+            HTTP_STATUS.NOT_FOUND,
+            `The Resource with ID '${categoryId}' was not found.`,
+            "ResourceNotFound"
+        );
         return response.status(204).end();
     } catch (error) {
-        return response.status(500).json(error)
+        next(error);
     }
 };
 
@@ -62,7 +65,7 @@ const headCategoryById = async (request, response) => {
         res.set('Last-Modified', updatedAt.toUTCString());
         return res.status(200).end();
     } catch (err) {
-        return res.status(500).end();
+        next(error);
     }
 };
 
@@ -73,7 +76,7 @@ const headCategories = async (request, response) => {
         if (headCategoriesResponse.lastModified) response.set('Last-Modified', lastModified.toUTCString());
         return response.status(200).end();
     } catch (error) {
-        return response.status(500).json(error);
+        next(error);
     }
 };
 
