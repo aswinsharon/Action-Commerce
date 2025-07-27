@@ -1,21 +1,25 @@
 const { buildbaseCreateBody } = require('../utils/utilities');
 const category = require("../models/categorySchema");
+const CategoryResponse = require('../dtos/category.response');
 
 const countCategories = async () => {
     const countCategoryResponse = await category.countDocuments();
     return countCategoryResponse;
 };
 
-const getAllCategories = async () => {
+const getAllCategories = async (projection = null) => {
     const limit = 20;
     const offset = 0;
-    const projection = null;
     const options = {};
     const query = {};
-    const getAllCategoriesResponse = await category.find(query, projection, options)
+    const categories = await category.find(query, projection, options)
         .sort({ "createdAt": -1 })
         .skip(offset)
-        .limit(limit);
+        .limit(limit)
+        .exec();
+    const getAllCategoriesResponse = categories.map(
+        (category) => new CategoryResponse(category)
+    );
     const total = await countCategories();
     return {
         limit,
@@ -37,12 +41,17 @@ const createCategory = async ({ clientId, data }) => {
     }
     const createCategoryBody = buildbaseCreateBody({ clientId, data });
     const createCategoryResponse = await category.insertOne(createCategoryBody);
+    console.log(createCategoryResponse);
     return createCategoryResponse;
 };
 
 const deleteCategoryById = async (categoryId) => {
+    let categoryDeleted = false;
     const deleteCategoryResponse = await category.deleteOne({ _id: categoryId });
-    return deleteCategoryResponse;
+    if (deleteCategoryResponse.deletedCount === 1) {
+        categoryDeleted = true;
+    }
+    return { categoryDeleted };
 };
 
 const headCategoryById = async (categoryId) => {

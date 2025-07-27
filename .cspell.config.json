@@ -3,14 +3,14 @@
   "language": "en",
   "dictionaries": ["typescript", "node"],
   "words": [
-    "ctx",    
     "mongoose",
     "mongodb",
     "res", "req",
     "dtos",
     "ETIMEOUT",
     "uuidv4",
-    "buildbaseCreateBody"
+    "buildbaseCreateBody",
+    ".js",".ts", ".json"
   ],
   "ignorePaths": [
     "**/node_modules",

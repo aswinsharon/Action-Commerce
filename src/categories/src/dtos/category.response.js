@@ -6,8 +6,14 @@ class CategoryResponse {
         this.lastModifiedAt = data.lastModifiedAt;
         this.name = data.name;
         this.slug = data.slug;
-        this.createdBy = data.createdBy?.clientId;
-        this.lastModifiedBy = data.lastModifiedBy?.clientId;
+        this.createdBy = {
+            clientId: data.createdBy?.clientId,
+            isPlatformClient: data.createdBy?.isPlatformClient
+        };
+        this.lastModifiedBy = {
+            clientId: data.lastModifiedBy?.clientId,
+            isPlatformClient: data.lastModifiedBy?.isPlatformClient
+        };
     }
 };
 
