@@ -49,10 +49,7 @@ const categorySchema = new Schema({
         of: String,
         required: true
     },
-},
-    {
-        versionKey: false, // disables __v(versioning)
-    }
+}
 );
 
 const category = mongoose.model('category', categorySchema);
