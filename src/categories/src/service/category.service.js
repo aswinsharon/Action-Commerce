@@ -36,12 +36,33 @@ const getCategoryById = async (categoryId) => {
 };
 
 const createCategory = async ({ clientId, data }) => {
-    if (!clientId) {
-        throw new Error("ClientId missing in the header")
+    const nameMap = data.name;
+    const nameValues = Object.values(nameMap);
+    const localeKeys = Object.keys(nameMap);
+    const localeSearchEntries = [];
+    localeKeys.forEach((locale) => {
+        localeSearchEntries.push({ [`name.${locale}`]: nameMap[locale] })
+    });
+    const existing = await category.findOne({
+        $or: nameValues.map(value => ({
+            $or: [
+                { "name.en": value },
+                { "name.de": value },
+                { "name.fr": value },
+            ]
+        })).flat()
+    });
+    if (existing) {
+        const existingNames = Object.values(existing.name || {});
+        const duplicateName = nameValues.find(name => existingNames.includes(name));
+        return {
+            categoryCreated: false,
+            code: "DuplicateValue",
+            duplicatedValue: duplicateName
+        }
     }
     const createCategoryBody = buildbaseCreateBody({ clientId, data });
     const createCategoryResponse = await category.insertOne(createCategoryBody);
-    console.log(createCategoryResponse);
     return createCategoryResponse;
 };
 

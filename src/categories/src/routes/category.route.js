@@ -4,8 +4,10 @@
  * as well as HEAD requests to check category resources.
  */
 
-const express = require('express');
-const categoryController = require('../controllers/category.controller');
+const express = require("express");
+const categoryController = require("../controllers/category.controller");
+const validateBody = require("../middlewares/validateBody")
+const { createCategoryValidationSchema } = require("../validations/category.validation")
 const router = express.Router();
 
 /**
@@ -38,7 +40,7 @@ router.get('/:categoryId', categoryController.getCategoryById);
  * @returns {Object} 201 - Newly created category object
  * @returns {Error} 400 - Invalid request data
  */
-router.post('/', categoryController.createCategory);
+router.post('/', validateBody(createCategoryValidationSchema), categoryController.createCategory);
 
 /**
  * POST /:categoryId

@@ -1,7 +1,7 @@
 class CategoryResponse {
     constructor(data) {
         this.id = data._id;
-        this.version = data.version;
+        this.version = data?.__v || 1;
         this.createdAt = data.createdAt;
         this.lastModifiedAt = data.lastModifiedAt;
         this.name = data.name;

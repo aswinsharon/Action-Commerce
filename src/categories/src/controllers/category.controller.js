@@ -37,9 +37,14 @@ const createCategory = async (request, response) => {
     const clientId = request?.headers['x-client-id'] || '';
     try {
         const createCategoryResponse = await categoryService.createCategory({ clientId, data });
-        console.log(createCategoryResponse);
+        if (!createCategoryResponse.categoryCreated && createCategoryResponse.duplicatedValue) {
+            return response.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(HTTP_STATUS.BAD_REQUEST, "Request body does not contain valid JSON.",
+                createCategoryResponse.code, `Category with the name :${createCategoryResponse.duplicatedValue} already exists`
+            ));
+        }
         return response.status(HTTP_STATUS.CREATED).json(createCategoryResponse);
     } catch (error) {
+        console.log(error)
         next(error);
     }
 };
