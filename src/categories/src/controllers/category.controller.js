@@ -7,7 +7,7 @@ const HTTP_STATUS = require('../constants/httpStatus');
 const getAllCategories = async (request, response) => {
     try {
         const getCategoriesResponse = await categoryService.getAllCategories();
-        return response.status(200).json(getCategoriesResponse);
+        return response.status(HTTP_STATUS.OK).json(getCategoriesResponse);
     } catch (error) {
         next(error);
     }
@@ -16,8 +16,8 @@ const getAllCategories = async (request, response) => {
 const getCategoryById = async (request, response, next) => {
     const { categoryId } = request.params;
     try {
-        const result = await categoryService.getCategoryById(categoryId);
-        if (!result) {
+        const getCategoriesResponse = await categoryService.getCategoryById(categoryId);
+        if (!getCategoriesResponse) {
             const errorResponse = new ErrorResponse(
                 HTTP_STATUS.NOT_FOUND,
                 `The Resource with ID '${categoryId}' was not found.`,
@@ -25,9 +25,9 @@ const getCategoryById = async (request, response, next) => {
             );
             return response.status(HTTP_STATUS.NOT_FOUND).json(errorResponse);
         }
-        const getCategoriesResponse = new CategoryResponse(result);
         return response.status(HTTP_STATUS.OK).json(getCategoriesResponse);
     } catch (error) {
+        console.log(error)
         next(error);
     }
 };
@@ -44,7 +44,6 @@ const createCategory = async (request, response) => {
         }
         return response.status(HTTP_STATUS.CREATED).json(createCategoryResponse);
     } catch (error) {
-        console.log(error)
         next(error);
     }
 };
@@ -63,7 +62,6 @@ const deleteCategoryById = async (request, response) => {
         }
         return response.status(HTTP_STATUS.NO_CONTENT).end();
     } catch (error) {
-        console.log(error)
         next(error);
     }
 };
