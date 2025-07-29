@@ -4,7 +4,7 @@ const CategoryResponse = require("../dtos/category.response");
 const ErrorResponse = require('../dtos/error.response');
 const HTTP_STATUS = require('../constants/httpStatus');
 
-const getAllCategories = async (request, response) => {
+const getAllCategories = async (request, response, next) => {
     try {
         const getCategoriesResponse = await categoryService.getAllCategories();
         return response.status(HTTP_STATUS.OK).json(getCategoriesResponse);
@@ -32,7 +32,7 @@ const getCategoryById = async (request, response, next) => {
     }
 };
 
-const createCategory = async (request, response) => {
+const createCategory = async (request, response, next) => {
     const data = request.body;
     const clientId = request?.headers['x-client-id'] || '';
     try {
@@ -48,7 +48,7 @@ const createCategory = async (request, response) => {
     }
 };
 
-const updateCategoryById = async (request, response) => {
+const updateCategoryById = async (request, response, next) => {
     const { categoryId } = request.params;
     const updateInfo = request.body;
     try {
@@ -74,7 +74,7 @@ const updateCategoryById = async (request, response) => {
     }
 };
 
-const deleteCategoryById = async (request, response) => {
+const deleteCategoryById = async (request, response, next) => {
     const { categoryId } = request.params;
     try {
         const deleteCategoryByIdResponse = await categoryService.deleteCategoryById(categoryId);
@@ -92,21 +92,21 @@ const deleteCategoryById = async (request, response) => {
     }
 };
 
-const headCategoryById = async (request, response) => {
+const headCategoryById = async (request, response, next) => {
     const { categoryId } = request.params;
     try {
         const updatedAt = await categoryService.categoryExistsById(categoryId);
         if (updatedAt) {
-            res.set('Last-Modified', updatedAt.toUTCString());
-            return res.status(HTTP_STATUS.OK).end();
+            response.set('Last-Modified', updatedAt.toUTCString());
+            return response.status(HTTP_STATUS.OK).end();
         }
-        return res.status(HTTP_STATUS.NOT_FOUND).end();
-    } catch (err) {
+        return response.status(HTTP_STATUS.NOT_FOUND).end();
+    } catch (error) {
         next(error);
     }
 };
 
-const headCategories = async (request, response) => {
+const headCategories = async (request, response, next) => {
     try {
         const headCategoriesResponse = await categoryService.headCategories();
         const { categoryCount, lastUpdatedTime } = headCategoriesResponse;
@@ -124,8 +124,8 @@ module.exports = {
     getAllCategories,
     getCategoryById,
     createCategory,
-    deleteCategoryById,
     updateCategoryById,
+    deleteCategoryById,
     headCategoryById,
     headCategories
 };
