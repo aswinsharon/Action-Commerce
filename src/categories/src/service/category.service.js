@@ -1,6 +1,6 @@
 const { buildbaseCreateBody } = require('../utils/utilities');
 const category = require("../models/categorySchema");
-const CategoryResponse = require('../dtos/category.response');
+const CategoryBody = require('../dtos/category.response');
 
 const countCategories = async () => {
     const countCategoryResponse = await category.countDocuments();
@@ -18,7 +18,7 @@ const getAllCategories = async (projection = null) => {
         .limit(limit)
         .exec();
     const getAllCategoriesResponse = categories.map(
-        (category) => new CategoryResponse(category)
+        (category) => new CategoryBody(category)
     );
     const total = await countCategories();
     return {
@@ -31,7 +31,11 @@ const getAllCategories = async (projection = null) => {
 };
 
 const getCategoryById = async (categoryId) => {
-    const getCategoryByIdResponse = await category.findOne({ _id: categoryId });
+    let getCategoryByIdResponse = null;
+    const result = await category.findOne({ _id: categoryId });
+    if (result) {
+        getCategoryByIdResponse = new CategoryBody(result);
+    }
     return getCategoryByIdResponse;
 };
 
@@ -39,30 +43,35 @@ const createCategory = async ({ clientId, data }) => {
     const nameMap = data.name;
     const nameValues = Object.values(nameMap);
     const localeKeys = Object.keys(nameMap);
-    const localeSearchEntries = [];
-    localeKeys.forEach((locale) => {
-        localeSearchEntries.push({ [`name.${locale}`]: nameMap[locale] })
-    });
+
+    // Dynamically create $or conditions to check localized name fields
+    const localeSearchEntries = localeKeys.map((locale) => ({
+        [`name.${locale}`]: nameMap[locale]
+    }));
+
+    // Search for any category with matching name in any locale
     const existing = await category.findOne({
-        $or: nameValues.map(value => ({
-            $or: [
-                { "name.en": value },
-                { "name.de": value },
-                { "name.fr": value },
-            ]
-        })).flat()
+        $or: localeSearchEntries
     });
+
     if (existing) {
-        const existingNames = Object.values(existing.name || {});
-        const duplicateName = nameValues.find(name => existingNames.includes(name));
+        const existingNameMap = Object.fromEntries(existing.name);
+        const existingNamesValues = Object.values(existingNameMap);
+
+        const duplicateName = nameValues.find(name =>
+            existingNamesValues.includes(name)
+        );
+
         return {
             categoryCreated: false,
             code: "DuplicateValue",
             duplicatedValue: duplicateName
-        }
+        };
     }
+
     const createCategoryBody = buildbaseCreateBody({ clientId, data });
     const createCategoryResponse = await category.insertOne(createCategoryBody);
+
     return createCategoryResponse;
 };
 

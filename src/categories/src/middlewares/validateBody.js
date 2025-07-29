@@ -17,7 +17,6 @@ module.exports = function validateBody(schema) {
                 errors
             });
         }
-
         next();
     };
 };
