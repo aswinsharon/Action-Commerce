@@ -48,6 +48,32 @@ const createCategory = async (request, response) => {
     }
 };
 
+const updateCategoryById = async (request, response) => {
+    const { categoryId } = request.params;
+    const updateInfo = request.body;
+    try {
+        const updateCategoryByIdResult = await categoryService.updateCategoryById(categoryId, updateInfo);
+        if (!updateCategoryByIdResult.categoryUpdated) {
+            if (updateCategoryByIdResult.code === "ConcurrentModification") {
+                return response.status(HTTP_STATUS.CONFLICT).json(new ErrorResponse(HTTP_STATUS.CONFLICT,
+                    `Expected version ${updateCategoryByIdResult.conflictedVersion} actual ${updateInfo.version}`,
+                    updateCategoryByIdResult.code
+                ));
+            } else if (updateCategoryByIdResult.code === "resourceNotFound") {
+                return response.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(
+                    HTTP_STATUS.NOT_FOUND,
+                    `The Resource with ID '${categoryId}' was not found.`,
+                    "ResourceNotFound"
+                ));
+            }
+        }
+        return response.status(HTTP_STATUS.OK).json(updateCategoryByIdResult);
+    } catch (error) {
+        console.log(error)
+        next(error);
+    }
+};
+
 const deleteCategoryById = async (request, response) => {
     const { categoryId } = request.params;
     try {
@@ -70,9 +96,11 @@ const headCategoryById = async (request, response) => {
     const { categoryId } = request.params;
     try {
         const updatedAt = await categoryService.categoryExistsById(categoryId);
-        if (!updatedAt) return res.status(404).end();
-        res.set('Last-Modified', updatedAt.toUTCString());
-        return res.status(HTTP_STATUS.OK).end();
+        if (updatedAt) {
+            res.set('Last-Modified', updatedAt.toUTCString());
+            return res.status(HTTP_STATUS.OK).end();
+        }
+        return res.status(404).end();
     } catch (err) {
         next(error);
     }
@@ -81,8 +109,11 @@ const headCategoryById = async (request, response) => {
 const headCategories = async (request, response) => {
     try {
         const headCategoriesResponse = await categoryService.headCategories();
-        response.set('X-Total-Count', count);
-        if (headCategoriesResponse.lastModified) response.set('Last-Modified', lastModified.toUTCString());
+        const { categoryCount, lastUpdatedTime } = headCategoriesResponse;
+        response.set("x-total-count", categoryCount);
+        if (headCategoriesResponse.lastUpdatedTime) {
+            response.set("last-modified", lastUpdatedTime.toUTCString());
+        }
         return response.status(HTTP_STATUS.OK).end();
     } catch (error) {
         next(error);
@@ -94,6 +125,7 @@ module.exports = {
     getCategoryById,
     createCategory,
     deleteCategoryById,
+    updateCategoryById,
     headCategoryById,
     headCategories
 };
