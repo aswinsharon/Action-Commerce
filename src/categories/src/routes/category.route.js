@@ -43,18 +43,6 @@ router.get('/:categoryId', categoryController.getCategoryById);
 router.post('/', validateBody(createCategoryValidationSchema), categoryController.createCategory);
 
 /**
- * POST /:categoryId
- * Updates an existing category by its ID.
- * 
- * @route POST /categories/:categoryId
- * @param {string} categoryId - ID of the category
- * @body {string} name - Updated name of the category
- * @returns {Object} 200 - Updated category object
- * @returns {Error} 404 - Category not found
- */
-// router.post('/:categoryId', categoryController.updateCategory);
-
-/**
  * DELETE /:categoryId
  * Deletes a category by its ID.
  * 
@@ -64,6 +52,18 @@ router.post('/', validateBody(createCategoryValidationSchema), categoryControlle
  * @returns {Error} 404 - Category not found
  */
 router.delete('/:categoryId', categoryController.deleteCategoryById);
+
+/**
+ * PATCH /:categoryId
+ * Updates an existing category by its ID.
+ * 
+ * @route PATCH /categories/:categoryId
+ * @param {string} categoryId - ID of the category
+ * @body {string} name - Updated name of the category
+ * @returns {Object} 200 - Updated category object
+ * @returns {Error} 404 - Category not found
+ */
+router.patch('/:categoryId', categoryController.updateCategoryById);
 
 /**
  * HEAD /:categoryId

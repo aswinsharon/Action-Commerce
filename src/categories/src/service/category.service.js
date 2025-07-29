@@ -70,8 +70,8 @@ const createCategory = async ({ clientId, data }) => {
     }
 
     const createCategoryBody = buildbaseCreateBody({ clientId, data });
-    const createCategoryResponse = await category.insertOne(createCategoryBody);
-
+    const result = await category.insertOne(createCategoryBody);
+    const createCategoryResponse = new CategoryBody(result);
     return createCategoryResponse;
 };
 
@@ -82,6 +82,50 @@ const deleteCategoryById = async (categoryId) => {
         categoryDeleted = true;
     }
     return { categoryDeleted };
+};
+
+const updateCategoryById = async (categoryId, updateInfo) => {
+    const actions = updateInfo.actions;
+    const version = updateInfo.version;
+    if (actions[0].action === "changeName") {
+
+        const nameInformation = actions[0].name;
+
+        const updateData = Object.keys(nameInformation).reduce((acc, locale) => {
+            acc[`name.${locale}`] = nameInformation[locale];
+            return acc;
+        }, {});
+
+        const updateResult = await category.updateOne(
+            { _id: categoryId, version: version },
+            {
+                $set: {
+                    ...updateData,
+                    lastModifiedAt: new Date()
+                },
+                $inc: { version: 1 }
+            }
+        );
+
+        if (updateResult.modifiedCount === 1) {
+            return await getCategoryById(categoryId);
+        }
+        // If not modified, check if the category exists
+        const existingCategory = await getCategoryById(categoryId);
+        if (existingCategory) {
+            return {
+                categoryUpdated: false,
+                code: "ConcurrentModification",
+                conflictedVersion: existingCategory.version,
+            };
+        } else {
+            return {
+                categoryUpdated: false,
+                code: "resourceNotFound",
+                message: "Category not found"
+            };
+        }
+    }
 };
 
 const headCategoryById = async (categoryId) => {
@@ -104,6 +148,7 @@ module.exports = {
     getCategoryById,
     createCategory,
     deleteCategoryById,
+    updateCategoryById,
     headCategoryById,
     headCategories
 };
