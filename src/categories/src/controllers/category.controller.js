@@ -100,7 +100,7 @@ const headCategoryById = async (request, response) => {
             res.set('Last-Modified', updatedAt.toUTCString());
             return res.status(HTTP_STATUS.OK).end();
         }
-        return res.status(404).end();
+        return res.status(HTTP_STATUS.NOT_FOUND).end();
     } catch (err) {
         next(error);
     }
