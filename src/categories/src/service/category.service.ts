@@ -1,5 +1,5 @@
-const { buildbaseCreateBody } = require('../utils/utilities');
-const category = require("../models/categorySchema");
+import { buildCreateBodyObject } from '../utils/utilities';
+import category from "../models/categorySchema";
 const CategoryBody = require('../dtos/category.response');
 
 const countCategories = async () => {
@@ -30,7 +30,7 @@ const getAllCategories = async (projection = null) => {
     };
 };
 
-const getCategoryById = async (categoryId) => {
+const getCategoryById = async (categoryId: string) => {
     let getCategoryByIdResponse = null;
     const result = await category.findOne({ _id: categoryId });
     if (result) {
@@ -69,13 +69,13 @@ const createCategory = async ({ clientId, data }) => {
         };
     }
 
-    const createCategoryBody = buildbaseCreateBody({ clientId, data });
-    const result = await category.insertOne(createCategoryBody);
+    const createCategoryBody = buildCreateBodyObject({ clientId, data });
+    const result = await category.create(createCategoryBody);
     const createCategoryResponse = new CategoryBody(result);
     return createCategoryResponse;
 };
 
-const deleteCategoryById = async (categoryId) => {
+const deleteCategoryById = async (categoryId: string) => {
     let categoryDeleted = false;
     const deleteCategoryResponse = await category.deleteOne({ _id: categoryId });
     if (deleteCategoryResponse.deletedCount === 1) {
@@ -84,7 +84,7 @@ const deleteCategoryById = async (categoryId) => {
     return { categoryDeleted };
 };
 
-const updateCategoryById = async (categoryId, updateInfo) => {
+const updateCategoryById = async (categoryId: string, updateInfo) => {
     const actions = updateInfo.actions;
     const version = updateInfo.version;
     if (actions[0].action === "changeName") {
@@ -128,7 +128,7 @@ const updateCategoryById = async (categoryId, updateInfo) => {
     }
 };
 
-const headCategoryById = async (categoryId) => {
+const categoryExistsById = async (categoryId: string) => {
     const category = await getCategoryById(categoryId);
     return category ? category.updatedAt : null;
 };
@@ -143,13 +143,13 @@ const headCategories = async () => {
     };
 };
 
-module.exports = {
+export default {
     getAllCategories,
     getCategoryById,
     createCategory,
     deleteCategoryById,
     updateCategoryById,
-    headCategoryById,
+    categoryExistsById,
     headCategories
 };
 

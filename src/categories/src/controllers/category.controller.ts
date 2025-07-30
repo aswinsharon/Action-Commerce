@@ -1,19 +1,18 @@
-const { buildbaseCreateBody, paginate } = require('../utils/utilities');
-const categoryService = require('../service/category.service');
-const CategoryResponse = require("../dtos/category.response");
-const ErrorResponse = require('../dtos/error.response');
-const HTTP_STATUS = require('../constants/httpStatus');
+import { Request, Response, NextFunction } from "express";
+import categoryService from '../service/category.service';
+import { ErrorResponse } from '../dtos/error.response';
+import HTTP_STATUS from '../constants/httpStatus';
 
-const getAllCategories = async (request, response, next) => {
+const getAllCategories = async (_request: Request, response: Response, next: NextFunction) => {
     try {
         const getCategoriesResponse = await categoryService.getAllCategories();
         return response.status(HTTP_STATUS.OK).json(getCategoriesResponse);
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
-const getCategoryById = async (request, response, next) => {
+const getCategoryById = async (request: Request, response: Response, next: NextFunction) => {
     const { categoryId } = request.params;
     try {
         const getCategoriesResponse = await categoryService.getCategoryById(categoryId);
@@ -27,12 +26,11 @@ const getCategoryById = async (request, response, next) => {
         }
         return response.status(HTTP_STATUS.OK).json(getCategoriesResponse);
     } catch (error) {
-        console.log(error)
-        next(error);
+        return next(error);
     }
 };
 
-const createCategory = async (request, response, next) => {
+const createCategory = async (request: Request, response: Response, next: NextFunction) => {
     const data = request.body;
     const clientId = request?.headers['x-client-id'] || '';
     try {
@@ -44,11 +42,11 @@ const createCategory = async (request, response, next) => {
         }
         return response.status(HTTP_STATUS.CREATED).json(createCategoryResponse);
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
-const updateCategoryById = async (request, response, next) => {
+const updateCategoryById = async (request: Request, response: Response, next: NextFunction) => {
     const { categoryId } = request.params;
     const updateInfo = request.body;
     try {
@@ -69,12 +67,11 @@ const updateCategoryById = async (request, response, next) => {
         }
         return response.status(HTTP_STATUS.OK).json(updateCategoryByIdResult);
     } catch (error) {
-        console.log(error)
-        next(error);
+        return next(error);
     }
 };
 
-const deleteCategoryById = async (request, response, next) => {
+const deleteCategoryById = async (request: Request, response: Response, next: NextFunction) => {
     const { categoryId } = request.params;
     try {
         const deleteCategoryByIdResponse = await categoryService.deleteCategoryById(categoryId);
@@ -88,11 +85,11 @@ const deleteCategoryById = async (request, response, next) => {
         }
         return response.status(HTTP_STATUS.NO_CONTENT).end();
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
-const headCategoryById = async (request, response, next) => {
+const headCategoryById = async (request: Request, response: Response, next: NextFunction) => {
     const { categoryId } = request.params;
     try {
         const updatedAt = await categoryService.categoryExistsById(categoryId);
@@ -102,25 +99,25 @@ const headCategoryById = async (request, response, next) => {
         }
         return response.status(HTTP_STATUS.NOT_FOUND).end();
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
-const headCategories = async (request, response, next) => {
+const headCategories = async (_request: Request, response: Response, next: NextFunction) => {
     try {
         const headCategoriesResponse = await categoryService.headCategories();
-        const { categoryCount, lastUpdatedTime } = headCategoriesResponse;
-        response.set("x-total-count", categoryCount);
+        const { categoryCount, lastUpdatedTime } = headCategoriesResponse || {};
+        response.set("x-total-count", String(categoryCount));
         if (headCategoriesResponse.lastUpdatedTime) {
             response.set("last-modified", lastUpdatedTime.toUTCString());
         }
         return response.status(HTTP_STATUS.OK).end();
     } catch (error) {
-        next(error);
+        return next(error);
     }
 };
 
-module.exports = {
+export default {
     getAllCategories,
     getCategoryById,
     createCategory,

@@ -1,4 +1,4 @@
-const supportedLocales = [
+const supportedLocales: string[] = [
     "en", "en-us", "en-gb", "de", "de-de", "fr", "fr-fr", "es", "es-es", "nl", "nl-nl",
     "it", "it-it", "pt", "pt-pt", "pt-br", "ru", "ru-ru", "pl", "pl-pl", "sv", "sv-se",
     "fi", "fi-fi", "da", "da-dk", "nb", "nb-no", "cs", "cs-cz", "sk", "sk-sk", "hu", "hu-hu",
@@ -6,7 +6,7 @@ const supportedLocales = [
 ];
 
 // Helper: check if a locale is supported
-function isValidLocale(locale) {
+function isValidLocale(locale: string) {
     return supportedLocales.includes(locale.toLowerCase());
 }
 
