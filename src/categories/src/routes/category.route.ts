@@ -4,10 +4,10 @@
  * as well as HEAD requests to check category resources.
  */
 
-const express = require("express");
-const categoryController = require("../controllers/category.controller");
-const validateBody = require("../middlewares/validateBody")
-const { createCategoryValidationSchema } = require("../validations/category.validation")
+import express from "express";
+import categoryController from "../controllers/category.controller";
+import { validateBody } from "../middlewares/validateBody";
+import { createCategoryValidationSchema } from "../validations/category.validation";
 const router = express.Router();
 
 /**
@@ -85,4 +85,4 @@ router.head('/:categoryId', categoryController.headCategoryById);
  */
 router.head('/', categoryController.headCategories);
 
-module.exports = router;
+export default router;

@@ -1,10 +1,13 @@
-const express = require('express');
-const cors = require('cors');
-const route = require('./routes/category.route');
-const databaseConfig = require('./config/database.config')
-const errorHandler = require("./middlewares/errorHandler");
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import route from './routes/category.route';
+import DatabaseConfig from './config/database.config';
+import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
+const dataBaseConfig = new DatabaseConfig();
+dotenv.config();
 
 app.use(express.json());
 app.use(cors());
@@ -12,12 +15,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/categories', route);
 app.use(errorHandler);
 
-databaseConfig.on("connected", (_dbConnection) => {
+dataBaseConfig.on("connected", () => {
     console.log("Event received: MongoDB connected successfully!");
 });
 
 const startServer = async () => {
-    await databaseConfig.connect();
+    await dataBaseConfig.connect();
     app.listen(6003, () => {
         console.log(`Server is running on port ${6003}`);
     });
@@ -25,7 +28,7 @@ const startServer = async () => {
 
 process.on("SIGINT", async () => {
     console.log("\nClosing MongoDB connection...");
-    const dbConnection = databaseConfig.getDbConnection();
+    const dbConnection = dataBaseConfig.getDbConnection();
     if (dbConnection) {
         await dbConnection.close();
     }

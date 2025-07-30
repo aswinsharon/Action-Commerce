@@ -44,4 +44,4 @@ const HTTP_STATUS = {
     GATEWAY_TIMEOUT: 504,
 };
 
-module.exports = HTTP_STATUS;
+export default HTTP_STATUS;

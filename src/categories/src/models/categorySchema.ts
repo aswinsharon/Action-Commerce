@@ -1,5 +1,5 @@
-const { Schema, default: mongoose } = require('mongoose');
-const { v4: uuidv4 } = require('uuid');
+import mongoose, { Schema } from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 const categorySchema = new Schema({
     _id: {
@@ -54,4 +54,4 @@ const categorySchema = new Schema({
 
 const category = mongoose.model('category', categorySchema);
 
-module.exports = category;
+export default category;

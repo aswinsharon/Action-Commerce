@@ -1,14 +1,13 @@
-const mongoose = require("mongoose");
-const { EventEmitter } = require("events");
+import { EventEmitter } from "events";
+import mongoose, { Connection } from "mongoose";
 
 const MONGO_URI = 'mongodb://127.0.0.1:27017/ms_action_categories_db';
 
 class DatabaseConfig extends EventEmitter {
-    RETRY_COUNT = 1;
-    MAX_COUNT = 3;
-    dbConnection = null;
+    private readonly MAX_COUNT = 3;
+    private dbConnection: Connection | null = null;
 
-    connect = async () => {
+    connect = async (retryCount = 1): Promise<void> => {
         const options = {
             autoIndex: false,
             maxPoolSize: 10,
@@ -18,11 +17,11 @@ class DatabaseConfig extends EventEmitter {
             await mongoose.connect(MONGO_URI, options);
             this.dbConnection = mongoose.connection;
             this.emit("connected", this.dbConnection);
-        } catch (error) {
-            if (this.isNetworkError(error) && this.RETRY_COUNT <= this.MAX_COUNT) {
-                console.error(`Network error occurred, retrying for ${this.RETRY_COUNT} time`, error);
+        } catch (error: any) {
+            if (error?.code === "ETIMEOUT" && retryCount <= this.MAX_COUNT) {
+                console.error(`Network error occurred, retrying for ${retryCount} time`, error);
                 await new Promise((resolve) => setTimeout(resolve, 5000));
-                this.RETRY_COUNT++;
+                retryCount++;
                 await this.connect();
             } else {
                 console.error("Maximum retries reached or non-network error, closing connection", error);
@@ -32,11 +31,7 @@ class DatabaseConfig extends EventEmitter {
         }
     };
 
-    isNetworkError(error) {
-        return error?.code === "ETIMEOUT";
-    }
-
-    async closeConnection() {
+    private async closeConnection() {
         if (this.dbConnection) {
             await this.dbConnection.close();
             this.dbConnection = null;
@@ -47,5 +42,4 @@ class DatabaseConfig extends EventEmitter {
         return this.dbConnection;
     }
 }
-
-module.exports = new DatabaseConfig();
+export default databaseConfig;

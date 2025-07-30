@@ -36,4 +36,5 @@ const createCategoryValidationSchema = Joi.object({
     })
 });
 
-module.exports = { createCategoryValidationSchema };
+export { createCategoryValidationSchema };
+
