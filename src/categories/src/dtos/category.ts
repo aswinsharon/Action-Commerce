@@ -7,8 +7,8 @@ export interface ClientInfo {
     isPlatformClient: boolean;
 }
 
-export interface CategoryData {
-    _id: string;
+export interface Category {
+    id: string;
     version?: number;
     createdAt: Date;
     lastModifiedAt: Date;
@@ -18,7 +18,9 @@ export interface CategoryData {
     lastModifiedBy?: Partial<ClientInfo>;
 }
 
-export class CategoryResponse {
+export type CategoryWithMongoId = Omit<Category, "id"> & { _id: string };
+
+export class CategoryBody {
     id: string;
     version: number;
     createdAt: Date;
@@ -28,7 +30,7 @@ export class CategoryResponse {
     createdBy?: ClientInfo;
     lastModifiedBy?: ClientInfo;
 
-    constructor(data: CategoryData) {
+    constructor(data: CategoryWithMongoId) {
         this.id = data._id;
         this.version = data?.version || 1;
         this.createdAt = new Date(data.createdAt);
@@ -37,11 +39,11 @@ export class CategoryResponse {
         this.slug = data.slug;
         this.createdBy = {
             clientId: data.createdBy?.clientId || '',
-            isPlatformClient: data.createdBy?.isPlatformClient || false,
+            isPlatformClient: data.createdBy?.isPlatformClient || false
         };
         this.lastModifiedBy = {
             clientId: data.lastModifiedBy?.clientId || '',
-            isPlatformClient: data.lastModifiedBy?.isPlatformClient || false,
+            isPlatformClient: data.lastModifiedBy?.isPlatformClient || false
         };
     }
 }

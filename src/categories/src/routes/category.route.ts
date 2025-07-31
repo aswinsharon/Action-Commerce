@@ -11,6 +11,26 @@ import { createCategoryValidationSchema } from "../validations/category.validati
 const router = express.Router();
 
 /**
+ * HEAD /:categoryId
+ * Sends metadata for a specific category.
+ * 
+ * @route HEAD /categories/:categoryId
+ * @param {string} categoryId - ID of the category
+ * @returns {Headers} 200 - Headers indicating resource metadata
+ * @returns {Error} 404 - Category not found
+ */
+router.head('/:categoryId', categoryController.checkCategoryExistsById);
+
+/**
+ * HEAD /
+ * Sends metadata for the categories collection without the actual data.
+ * 
+ * @route HEAD /categories
+ * @returns {Headers} 200 - Headers indicating resource metadata
+ */
+router.head('/', categoryController.checkCategoriesExists);
+
+/**
  * GET /
  * Retrieves a list of all categories.
  * 
@@ -64,25 +84,5 @@ router.delete('/:categoryId', categoryController.deleteCategoryById);
  * @returns {Error} 404 - Category not found
  */
 router.patch('/:categoryId', categoryController.updateCategoryById);
-
-/**
- * HEAD /:categoryId
- * Sends metadata for a specific category.
- * 
- * @route HEAD /categories/:categoryId
- * @param {string} categoryId - ID of the category
- * @returns {Headers} 200 - Headers indicating resource metadata
- * @returns {Error} 404 - Category not found
- */
-router.head('/:categoryId', categoryController.headCategoryById);
-
-/**
- * HEAD /
- * Sends metadata for the categories collection without the actual data.
- * 
- * @route HEAD /categories
- * @returns {Headers} 200 - Headers indicating resource metadata
- */
-router.head('/', categoryController.headCategories);
 
 export default router;

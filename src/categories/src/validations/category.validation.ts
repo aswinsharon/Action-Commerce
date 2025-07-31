@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const { supportedLocales } = require("../utils/locales");
 
-const localizedStringSchema = Joi.object().custom((value, helpers) => {
+const localizedStringSchema = Joi.object().custom((value: any, helpers: any) => {
     if (typeof value !== "object" || Array.isArray(value)) {
         return helpers.error("object.base");
     }
