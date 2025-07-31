@@ -14,9 +14,11 @@ const getAllCategories = async (_request: Request, response: Response, next: Nex
 
 const getCategoryById = async (request: Request, response: Response, next: NextFunction) => {
     const { categoryId } = request.params;
+    console.log("under getCategoryById", categoryId)
     try {
         const getCategoriesResponse = await categoryService.getCategoryById(categoryId);
-        if (!getCategoriesResponse) {
+        console.log("getCategoriesResponse", getCategoriesResponse);
+        if (getCategoriesResponse.code === "ResourceNotFound") {
             const errorResponse = new ErrorResponse(
                 HTTP_STATUS.NOT_FOUND,
                 `The Resource with ID '${categoryId}' was not found.`,
@@ -32,7 +34,9 @@ const getCategoryById = async (request: Request, response: Response, next: NextF
 
 const createCategory = async (request: Request, response: Response, next: NextFunction) => {
     const data = request.body;
-    const clientId = request?.headers['x-client-id'] || '';
+    const clientId = Array.isArray(request.headers['x-client-id'])
+        ? request.headers['x-client-id'][0]
+        : request.headers['x-client-id'] ?? '';
     try {
         const createCategoryResponse = await categoryService.createCategory({ clientId, data });
         if (!createCategoryResponse.categoryCreated && createCategoryResponse.duplicatedValue) {
@@ -51,13 +55,13 @@ const updateCategoryById = async (request: Request, response: Response, next: Ne
     const updateInfo = request.body;
     try {
         const updateCategoryByIdResult = await categoryService.updateCategoryById(categoryId, updateInfo);
-        if (!updateCategoryByIdResult.categoryUpdated) {
-            if (updateCategoryByIdResult.code === "ConcurrentModification") {
+        if (!updateCategoryByIdResult?.categoryUpdated) {
+            if (updateCategoryByIdResult?.code === "ConcurrentModification") {
                 return response.status(HTTP_STATUS.CONFLICT).json(new ErrorResponse(HTTP_STATUS.CONFLICT,
                     `Expected version ${updateCategoryByIdResult.conflictedVersion} actual ${updateInfo.version}`,
                     updateCategoryByIdResult.code
                 ));
-            } else if (updateCategoryByIdResult.code === "resourceNotFound") {
+            } else if (updateCategoryByIdResult.code === "ResourceNotFound") {
                 return response.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(
                     HTTP_STATUS.NOT_FOUND,
                     `The Resource with ID '${categoryId}' was not found.`,
@@ -89,23 +93,26 @@ const deleteCategoryById = async (request: Request, response: Response, next: Ne
     }
 };
 
-const headCategoryById = async (request: Request, response: Response, next: NextFunction) => {
+const checkCategoryExistsById = async (request: Request, response: Response, next: NextFunction) => {
     const { categoryId } = request.params;
     try {
-        const updatedAt = await categoryService.categoryExistsById(categoryId);
-        if (updatedAt) {
-            response.set('Last-Modified', updatedAt.toUTCString());
+        const { code, data } = await categoryService.checkCategoryExistsById(categoryId) || {};
+        console.log("headCategoryById", code, data);
+        if (code === "Success" && data) {
+            response.set('Last-Modified', data.toUTCString());
             return response.status(HTTP_STATUS.OK).end();
         }
         return response.status(HTTP_STATUS.NOT_FOUND).end();
     } catch (error) {
+        console.log("error", error)
         return next(error);
     }
 };
 
-const headCategories = async (_request: Request, response: Response, next: NextFunction) => {
+const checkCategoriesExists = async (_request: Request, response: Response, next: NextFunction) => {
+    console.log("checkCategoriesExists called");
     try {
-        const headCategoriesResponse = await categoryService.headCategories();
+        const headCategoriesResponse = await categoryService.checkCategoriesExists();
         const { categoryCount, lastUpdatedTime } = headCategoriesResponse || {};
         response.set("x-total-count", String(categoryCount));
         if (headCategoriesResponse.lastUpdatedTime) {
@@ -123,6 +130,6 @@ export default {
     createCategory,
     updateCategoryById,
     deleteCategoryById,
-    headCategoryById,
-    headCategories
+    checkCategoryExistsById,
+    checkCategoriesExists
 };

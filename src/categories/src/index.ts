@@ -1,13 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import route from './routes/category.route';
-import DatabaseConfig from './config/database.config';
+import { DatabaseConfig } from './config/database.config';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
 const dataBaseConfig = new DatabaseConfig();
-dotenv.config();
 
 app.use(express.json());
 app.use(cors());

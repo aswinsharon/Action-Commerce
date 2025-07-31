@@ -3,7 +3,7 @@
     "target": "es2020",
     "allowJs": true,                                  
     "lib": ["ES6"],                                        
-    "module": "esnext",                              
+    "module": "commonjs",                              
     "rootDir": "src", 
     "outDir": "build/main",                                 
     "moduleResolution": "node",
@@ -18,7 +18,7 @@
     "noFallthroughCasesInSwitch": true,               
     "pretty": true,
     "skipLibCheck": true,
-    "types": ["node", "jest"]
+    "types": ["node"]
   },
   "include":["src/**/*.ts","src/**/*.d.ts", "src/api/v1/services/stockServices.js", "src/config/Loggers.ts","src/api/v1/resources/*.gql"],
   "exclude": [
