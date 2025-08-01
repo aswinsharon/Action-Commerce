@@ -1,23 +1,22 @@
-import { Request, Response, NextFunction } from "express";
+import express from "express";
 import categoryService from '../service/category.service';
+import { Response } from '../dtos/success.response';
 import { ErrorResponse } from '../dtos/error.response';
 import HTTP_STATUS from '../constants/httpStatus';
 
-const getAllCategories = async (_request: Request, response: Response, next: NextFunction) => {
+const getAllCategories = async (_request: express.Request, response: express.Response, next: express.NextFunction) => {
     try {
         const getCategoriesResponse = await categoryService.getAllCategories();
-        return response.status(HTTP_STATUS.OK).json(getCategoriesResponse);
+        return response.status(HTTP_STATUS.OK).json(new Response(getCategoriesResponse));
     } catch (error) {
         return next(error);
     }
 };
 
-const getCategoryById = async (request: Request, response: Response, next: NextFunction) => {
+const getCategoryById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     const { categoryId } = request.params;
-    console.log("under getCategoryById", categoryId)
     try {
         const getCategoriesResponse = await categoryService.getCategoryById(categoryId);
-        console.log("getCategoriesResponse", getCategoriesResponse);
         if (getCategoriesResponse.code === "ResourceNotFound") {
             const errorResponse = new ErrorResponse(
                 HTTP_STATUS.NOT_FOUND,
@@ -26,13 +25,13 @@ const getCategoryById = async (request: Request, response: Response, next: NextF
             );
             return response.status(HTTP_STATUS.NOT_FOUND).json(errorResponse);
         }
-        return response.status(HTTP_STATUS.OK).json(getCategoriesResponse);
+        return response.status(HTTP_STATUS.OK).json(new Response(getCategoriesResponse));
     } catch (error) {
         return next(error);
     }
 };
 
-const createCategory = async (request: Request, response: Response, next: NextFunction) => {
+const createCategory = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     const data = request.body;
     const clientId = Array.isArray(request.headers['x-client-id'])
         ? request.headers['x-client-id'][0]
@@ -40,19 +39,21 @@ const createCategory = async (request: Request, response: Response, next: NextFu
     try {
         const createCategoryResponse = await categoryService.createCategory({ clientId, data });
         if (!createCategoryResponse.categoryCreated && createCategoryResponse.duplicatedValue) {
-            return response.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(HTTP_STATUS.BAD_REQUEST, "Request body does not contain valid JSON.",
+            return response.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(HTTP_STATUS.BAD_REQUEST, "express.Request body does not contain valid JSON.",
                 createCategoryResponse.code, `Category with the name :${createCategoryResponse.duplicatedValue} already exists`
             ));
         }
-        return response.status(HTTP_STATUS.CREATED).json(createCategoryResponse);
+        return response.status(HTTP_STATUS.CREATED).json(new Response(createCategoryResponse));
     } catch (error) {
+        console.error("Error in createCategory:", error);
         return next(error);
     }
 };
 
-const updateCategoryById = async (request: Request, response: Response, next: NextFunction) => {
+const updateCategoryById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     const { categoryId } = request.params;
     const updateInfo = request.body;
+    console.log("Update Info:", updateInfo);
     try {
         const updateCategoryByIdResult = await categoryService.updateCategoryById(categoryId, updateInfo);
         if (!updateCategoryByIdResult?.categoryUpdated) {
@@ -69,17 +70,18 @@ const updateCategoryById = async (request: Request, response: Response, next: Ne
                 ));
             }
         }
-        return response.status(HTTP_STATUS.OK).json(updateCategoryByIdResult);
+        return response.status(HTTP_STATUS.OK).json(new Response(updateCategoryByIdResult));
     } catch (error) {
+        console.error("Error in updateCategoryById:", error);
         return next(error);
     }
 };
 
-const deleteCategoryById = async (request: Request, response: Response, next: NextFunction) => {
+const deleteCategoryById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     const { categoryId } = request.params;
     try {
         const deleteCategoryByIdResponse = await categoryService.deleteCategoryById(categoryId);
-        if (!deleteCategoryByIdResponse.categoryDeleted) {
+        if (deleteCategoryByIdResponse.code === "ResourceNotFound") {
             const errorResponse = new ErrorResponse(
                 HTTP_STATUS.NOT_FOUND,
                 `The Resource with ID '${categoryId}' was not found.`,
@@ -93,24 +95,21 @@ const deleteCategoryById = async (request: Request, response: Response, next: Ne
     }
 };
 
-const checkCategoryExistsById = async (request: Request, response: Response, next: NextFunction) => {
+const checkCategoryExistsById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     const { categoryId } = request.params;
     try {
         const { code, data } = await categoryService.checkCategoryExistsById(categoryId) || {};
-        console.log("headCategoryById", code, data);
         if (code === "Success" && data) {
             response.set('Last-Modified', data.toUTCString());
             return response.status(HTTP_STATUS.OK).end();
         }
         return response.status(HTTP_STATUS.NOT_FOUND).end();
     } catch (error) {
-        console.log("error", error)
         return next(error);
     }
 };
 
-const checkCategoriesExists = async (_request: Request, response: Response, next: NextFunction) => {
-    console.log("checkCategoriesExists called");
+const checkCategoriesExists = async (_request: express.Request, response: express.Response, next: express.NextFunction) => {
     try {
         const headCategoriesResponse = await categoryService.checkCategoriesExists();
         const { categoryCount, lastUpdatedTime } = headCategoriesResponse || {};

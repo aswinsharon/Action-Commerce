@@ -1,7 +1,5 @@
 import { EventEmitter } from "events";
 import mongoose, { Connection } from "mongoose";
-import dotenv from "dotenv";
-dotenv.config();
 
 export class DatabaseConfig extends EventEmitter {
     private readonly MAX_COUNT = 3;
@@ -9,18 +7,10 @@ export class DatabaseConfig extends EventEmitter {
     private mongoConnectionUrl: string = '';
 
     private buildMongoUri(): string {
-        const username = process.env.MONGO_USERNAME || '';
-        const password = process.env.MONGO_PASSWORD || '';
-        const host = process.env.MONGO_HOST || '127.0.0.1';
-        const port = process.env.MONGO_PORT || '27017';
-        const authSource = process.env.MONGO_AUTH_SOURCE || 'admin';
-        const databaseName = process.env.MONGO_DATABASE_NAME || 'ms_action_categories_db';
-        console.log("username", username);
-        console.log("password", password);
-        if (username && password) {
-            return `mongodb://${username}:${password}@${host}:${port}/${databaseName}?authSource=${authSource}`;
+        if (process.env.MONGO_URI) {
+            return process.env.MONGO_URI + `/${process.env.MONGO_DATABASE_NAME || 'ms_action_categories_db'}`;
         } else {
-            return `mongodb://${host}:${port}/${databaseName}`;
+            throw new Error("MONGO_URI is not defined in the environment variables.");
         }
     }
 
