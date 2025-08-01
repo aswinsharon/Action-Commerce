@@ -1,9 +1,12 @@
 import express from 'express';
 import cors from 'cors';
+import serverless from "serverless-http";
+import dotenv from 'dotenv';
 import route from './routes/category.route';
 import { DatabaseConfig } from './config/database.config';
 import { errorHandler } from './middlewares/errorHandler';
 
+dotenv.config();
 const app = express();
 const dataBaseConfig = new DatabaseConfig();
 
@@ -36,3 +39,5 @@ process.on("SIGINT", async () => {
 (async () => {
     await startServer();
 })();
+
+exports.handler = serverless(app);

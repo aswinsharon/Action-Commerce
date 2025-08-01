@@ -3,9 +3,10 @@ import category from "../models/categorySchema";
 import {
     CategoryBody
 } from '../dtos/category';
+import HTTP_STATUS from '../constants/httpStatus';
 
 interface ServiceResponse<T> {
-    status: boolean;
+    status: number;
     code: string;
     message?: string;
     data?: T;
@@ -60,7 +61,7 @@ interface UpdateInfo {
 
 const countCategories = async (): Promise<ServiceResponse<number>> => {
     const total = await category.countDocuments();
-    return { status: true, code: "Success", data: total };
+    return { status: HTTP_STATUS.OK, code: "Success", data: total };
 };
 
 const getAllCategories = async (projection: Record<string, unknown> | null = null): Promise<ServiceResponse<any>> => {
@@ -84,7 +85,7 @@ const getAllCategories = async (projection: Record<string, unknown> | null = nul
     });
     const totalRes = await countCategories();
     return {
-        status: true,
+        status: HTTP_STATUS.OK,
         code: "Success",
         data: {
             limit,
@@ -101,8 +102,8 @@ const getCategoryById = async (categoryId: string): Promise<ServiceResponse<Cate
     if (result) {
         const obj = result.toObject();
         return {
-            status: true,
-            code: "ResourceFound",
+            status: HTTP_STATUS.OK,
+            code: "Success",
             data: new CategoryBody({
                 ...obj,
                 name: obj.name instanceof Map ? Object.fromEntries(obj.name) : obj.name,
@@ -112,7 +113,7 @@ const getCategoryById = async (categoryId: string): Promise<ServiceResponse<Cate
             })
         };
     }
-    return { status: false, code: "ResourceNotFound", message: "Category not found", data: null };
+    return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Category not found", data: null };
 };
 
 const createCategory = async ({
@@ -128,7 +129,7 @@ const createCategory = async ({
         const existingNameMap = existing.name instanceof Map ? Object.fromEntries(existing.name) : existing.name;
         const duplicateName = nameValues.find(name => Object.values(existingNameMap).includes(name));
         return {
-            status: false,
+            status: HTTP_STATUS.BAD_REQUEST,
             code: "DuplicateValue",
             duplicatedValue: duplicateName || "Unknown",
             data: null
@@ -138,7 +139,7 @@ const createCategory = async ({
     const result = await category.create(createBody);
     const obj = result.toObject();
     return {
-        status: true,
+        status: HTTP_STATUS.CREATED,
         code: "Success",
         data: new CategoryBody({
             ...obj,
@@ -153,9 +154,9 @@ const createCategory = async ({
 const deleteCategoryById = async (categoryId: string): Promise<ServiceResponse<boolean>> => {
     const response = await category.deleteOne({ _id: categoryId });
     if (response.deletedCount === 1) {
-        return { status: true, code: "Success", data: true };
+        return { status: HTTP_STATUS.NO_CONTENT, code: "Success", data: true };
     }
-    return { status: false, code: "ResourceNotFound", data: false };
+    return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", data: false };
 };
 
 const updateCategoryById = async (
@@ -163,7 +164,7 @@ const updateCategoryById = async (
     updateInfo: UpdateInfo
 ): Promise<ServiceResponse<CategoryBody | null>> => {
     const { actions, version } = updateInfo;
-    if (actions[0].action === "changeName") {
+    if (actions.length && actions[0].action === "changeName") {
         const nameInfo = actions[0].name;
         const updateData = Object.keys(nameInfo).reduce<Record<string, string>>((acc, locale) => {
             acc[`name.${locale}`] = nameInfo[locale];
@@ -184,7 +185,7 @@ const updateCategoryById = async (
             if (updated) {
                 const obj = updated.toObject();
                 return {
-                    status: true,
+                    status: HTTP_STATUS.OK,
                     code: "Success",
                     data: new CategoryBody({
                         ...obj,
@@ -196,7 +197,7 @@ const updateCategoryById = async (
                 };
             }
             return {
-                status: false,
+                status: HTTP_STATUS.NOT_FOUND,
                 code: "ResourceNotFound",
                 message: "Category not found",
                 data: null
@@ -205,21 +206,21 @@ const updateCategoryById = async (
         const existing = await category.findOne({ _id: categoryId });
         if (existing) {
             return {
-                status: false,
+                status: HTTP_STATUS.CONFLICT,
                 code: "ConcurrentModification",
                 conflictedVersion: existing.version,
                 data: null
             };
         }
         return {
-            status: false,
+            status: HTTP_STATUS.NOT_FOUND,
             code: "ResourceNotFound",
             message: "Category not found",
             data: null
         };
     } else {
         return {
-            status: false,
+            status: HTTP_STATUS.BAD_REQUEST,
             code: "InvalidAction",
             message: "Unknown action",
             data: null
@@ -230,9 +231,9 @@ const updateCategoryById = async (
 const checkCategoryExistsById = async (categoryId: string): Promise<ServiceResponse<Date | null>> => {
     const result = await category.findOne({ _id: categoryId });
     if (result) {
-        return { status: true, code: "Success", data: result.lastModifiedAt };
+        return { status: HTTP_STATUS.OK, code: "Success", data: result.lastModifiedAt };
     }
-    return { status: false, code: "ResourceNotFound", data: null };
+    return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", data: null };
 };
 
 const checkCategoriesExists = async (): Promise<ServiceResponse<{ lastUpdatedTime: Date | undefined; categoryCount: number }>> => {
@@ -240,7 +241,7 @@ const checkCategoriesExists = async (): Promise<ServiceResponse<{ lastUpdatedTim
     const lastUpdatedTime = latestCategory?.lastModifiedAt;
     const totalRes = await countCategories();
     return {
-        status: true,
+        status: HTTP_STATUS.OK,
         code: "Success",
         data: {
             lastUpdatedTime,
