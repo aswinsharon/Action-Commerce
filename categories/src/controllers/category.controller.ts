@@ -1,8 +1,8 @@
 import express from "express";
 import categoryService from '../service/category.service';
-import { Response } from '../dtos/success.response';
-import { ErrorResponse } from '../dtos/error.response';
-import HTTP_STATUS from '../constants/httpStatus';
+import { Response } from '../common/dtos/success.response';
+import { ErrorResponse } from '../common/dtos/error.response';
+import HTTP_STATUS from '../common/constants/httpStatus';
 
 const getAllCategories = async (_request: express.Request, response: express.Response, next: express.NextFunction) => {
     try {
@@ -39,13 +39,12 @@ const createCategory = async (request: express.Request, response: express.Respon
     try {
         const createCategoryResponse = await categoryService.createCategory({ clientId, data });
         if (!createCategoryResponse.categoryCreated && createCategoryResponse.duplicatedValue) {
-            return response.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(HTTP_STATUS.BAD_REQUEST, "express.Request body does not contain valid JSON.",
+            return response.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(HTTP_STATUS.BAD_REQUEST, "Request body does not contain valid JSON.",
                 createCategoryResponse.code, `Category with the name :${createCategoryResponse.duplicatedValue} already exists`
             ));
         }
         return response.status(HTTP_STATUS.CREATED).json(new Response(createCategoryResponse));
     } catch (error) {
-        console.error("Error in createCategory:", error);
         return next(error);
     }
 };
@@ -53,7 +52,6 @@ const createCategory = async (request: express.Request, response: express.Respon
 const updateCategoryById = async (request: express.Request, response: express.Response, next: express.NextFunction) => {
     const { categoryId } = request.params;
     const updateInfo = request.body;
-    console.log("Update Info:", updateInfo);
     try {
         const updateCategoryByIdResult = await categoryService.updateCategoryById(categoryId, updateInfo);
         if (!updateCategoryByIdResult?.categoryUpdated) {

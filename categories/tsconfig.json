@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "allowJs": true,                                  
+    "lib": ["ES6"],                                        
+    "module": "commonjs",                              
+    "rootDir": "src", 
+    "outDir": "build/main",                                 
+    "moduleResolution": "node",
+    "declaration": true, 
+    "inlineSourceMap": true,   
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,           
+    "strict": true,                                      
+    "noUnusedLocals": true,                           
+    "noUnusedParameters": false,                                  
+    "noImplicitReturns": true,                       
+    "noFallthroughCasesInSwitch": true,               
+    "pretty": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include":["src/**/*.ts","src/**/*.d.ts", "src/api/v1/services/stockServices.js", "src/common/config/Loggers.ts","src/api/v1/resources/*.gql"],
+  "exclude": [
+    "node_modules/**",
+    "**/*.test.ts",
+    "**/*.spec.ts"],
+  "compileOnSave": false
+}
