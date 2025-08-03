@@ -4,6 +4,7 @@ import {
     CategoryBody
 } from '../common/dtos/category';
 import HTTP_STATUS from '../common/constants/httpStatus';
+import { LogMethod } from '../common/decorators/logger.decorators';
 
 interface ServiceResponse<T> {
     status: number;
@@ -58,7 +59,6 @@ interface UpdateInfo {
 //     message: string;
 //     data: null;
 // }
-
 const countCategories = async (): Promise<ServiceResponse<number>> => {
     const total = await category.countDocuments();
     return { status: HTTP_STATUS.OK, code: "Success", data: total };

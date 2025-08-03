@@ -5,7 +5,7 @@
  */
 
 import express from "express";
-import categoryController from "../controllers/category.controller";
+import { categoryController } from "../controllers/category.controller";
 import { validateBody } from "../middlewares/validateBody";
 import { createCategoryValidationSchema } from "../validations/category.validation";
 const router = express.Router();
