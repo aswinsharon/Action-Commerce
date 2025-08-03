@@ -19,6 +19,7 @@
   "author": "Aswin Sharon",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^5.4.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "dotenv-cli": "^10.0.0",
