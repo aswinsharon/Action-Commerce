@@ -5,7 +5,6 @@ import { Logger } from "../loggers/logger";
 const logger = new Logger();
 
 export class DatabaseConfig extends EventEmitter {
-    private readonly MAX_COUNT = 3;
     private dbConnection: Connection | null = null;
     private mongoConnectionUrl: string = '';
 
@@ -17,7 +16,7 @@ export class DatabaseConfig extends EventEmitter {
         }
     }
 
-    public async connect(retryCount = 1): Promise<void> {
+    public async connect(): Promise<void> {
         const options = {
             autoIndex: false,
             maxPoolSize: 10,
@@ -30,15 +29,9 @@ export class DatabaseConfig extends EventEmitter {
             this.dbConnection = mongoose.connection;
             this.emit("connected", this.dbConnection);
         } catch (error: any) {
-            if (error?.code === "ETIMEOUT" && retryCount < this.MAX_COUNT) {
-                logger.error(`Network error occurred, retrying for ${retryCount} time` + JSON.stringify(error));
-                await new Promise((resolve) => setTimeout(resolve, 5000));
-                await this.connect(retryCount + 1);
-            } else {
-                logger.error("Maximum retries reached or non-network error, closing connection" + JSON.stringify(error));
-                await this.closeConnection();
-                process.exit(1);
-            }
+            logger.error(JSON.stringify(error));
+            await this.closeConnection();
+            process.exit(1);
         }
     }
 
