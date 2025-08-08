@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { ObjectSchema, ValidationErrorItem } from "joi";
-import HTTP_STATUS from "../common/constants/httpStatus";
-import { Logger } from "../common/loggers/logger";
+import HTTP_STATUS from "../constants/httpStatus";
+import { Logger } from "../loggers/logger";
 
 const logger = new Logger();
 /**

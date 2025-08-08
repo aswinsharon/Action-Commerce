@@ -1,0 +1,17 @@
+{
+  "name": "load-balancer",
+  "version": "1.0.0",
+  "description": "Load balancer service for action commerce application",
+  "main": "load-balancer.js",
+  "scripts": {
+    "start-loading": "node load-balancer.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "http-proxy": "^1.18.1"
+  }
+}

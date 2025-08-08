@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { ErrorResponse } from "../common/dtos/error.response";
-import { Logger } from "../common/loggers/logger";
+import { ErrorResponse } from "../dtos/error.response";
+import { Logger } from "../loggers/logger";
 
 const logger = new Logger();
 
