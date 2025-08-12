@@ -1,13 +1,13 @@
 import express from "express";
-import categoryService from '../service/category.service';
+import ProductService from '../service/Product.service';
 import { Response } from '../common/dtos/success.response';
 import { ErrorResponse } from '../common/dtos/error.response';
 import HTTP_STATUS from '../common/constants/httpStatus';
 
-class CategoryController {
+class ProductController {
     async getAllCategories(_req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            const result = await categoryService.getAllCategories();
+            const result = await ProductService.getAllCategories();
             res.status(HTTP_STATUS.OK).json(new Response(result));
         } catch (error) {
             next(error);
@@ -15,14 +15,14 @@ class CategoryController {
         return null;
     }
 
-    async getCategoryById(req: express.Request, res: express.Response, next: express.NextFunction) {
-        const { categoryId } = req.params;
+    async getProductById(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { ProductId } = req.params;
         try {
-            const result = await categoryService.getCategoryById(categoryId);
+            const result = await ProductService.getProductById(ProductId);
             if (result.code === "ResourceNotFound") {
                 return res.status(HTTP_STATUS.NOT_FOUND).json(new ErrorResponse(
                     HTTP_STATUS.NOT_FOUND,
-                    `The Resource with ID '${categoryId}' was not found.`,
+                    `The Resource with ID '${ProductId}' was not found.`,
                     "ResourceNotFound"
                 ));
             }
@@ -33,15 +33,15 @@ class CategoryController {
         return null;
     }
 
-    async createCategory(req: express.Request, res: express.Response, next: express.NextFunction) {
+    async createProduct(req: express.Request, res: express.Response, next: express.NextFunction) {
         const data = req.body;
         const clientId = Array.isArray(req.headers['x-client-id']) ? req.headers['x-client-id'][0] : req.headers['x-client-id'] ?? '';
         try {
-            const result = await categoryService.createCategory({ clientId, data });
+            const result = await ProductService.createProduct({ clientId, data });
             if (result.code === "DuplicateValue") {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(
                     HTTP_STATUS.BAD_REQUEST,
-                    `Category with the name :${result.duplicatedValue} already exists`,
+                    `Product with the name :${result.duplicatedValue} already exists`,
                     result.code
                 ));
             }
@@ -52,11 +52,11 @@ class CategoryController {
         return null;
     }
 
-    async updateCategoryById(req: express.Request, res: express.Response, next: express.NextFunction) {
-        const { categoryId } = req.params;
+    async updateProductById(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { ProductId } = req.params;
         const updateInfo = req.body;
         try {
-            const result = await categoryService.updateCategoryById(categoryId, updateInfo);
+            const result = await ProductService.updateProductById(ProductId, updateInfo);
             if (result.code === "ConcurrentModification") {
                 return res.status(HTTP_STATUS.CONFLICT).json(new ErrorResponse(
                     HTTP_STATUS.CONFLICT,
@@ -67,7 +67,7 @@ class CategoryController {
             if (result.code === "ResourceNotFound") {
                 return res.status(HTTP_STATUS.NOT_FOUND).json(new ErrorResponse(
                     HTTP_STATUS.NOT_FOUND,
-                    `The Resource with ID '${categoryId}' was not found.`,
+                    `The Resource with ID '${ProductId}' was not found.`,
                     "ResourceNotFound"
                 ));
             }
@@ -78,14 +78,14 @@ class CategoryController {
         return null;
     }
 
-    async deleteCategoryById(req: express.Request, res: express.Response, next: express.NextFunction) {
-        const { categoryId } = req.params;
+    async deleteProductById(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { ProductId } = req.params;
         try {
-            const result = await categoryService.deleteCategoryById(categoryId);
+            const result = await ProductService.deleteProductById(ProductId);
             if (result.code === "ResourceNotFound") {
                 return res.status(HTTP_STATUS.NOT_FOUND).json(new ErrorResponse(
                     HTTP_STATUS.NOT_FOUND,
-                    `The Resource with ID '${categoryId}' was not found.`,
+                    `The Resource with ID '${ProductId}' was not found.`,
                     "ResourceNotFound"
                 ));
             }
@@ -96,10 +96,10 @@ class CategoryController {
         return null;
     }
 
-    async checkCategoryExistsById(req: express.Request, res: express.Response, next: express.NextFunction) {
-        const { categoryId } = req.params;
+    async checkProductExistsById(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { ProductId } = req.params;
         try {
-            const { code, data } = await categoryService.checkCategoryExistsById(categoryId) || {};
+            const { code, data } = await ProductService.checkProductExistsById(ProductId) || {};
             if (code === "Success" && data) {
                 res.set('Last-Modified', data.toUTCString());
                 return res.status(HTTP_STATUS.OK).end();
@@ -113,9 +113,9 @@ class CategoryController {
 
     async checkCategoriesExists(_req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            const { data } = await categoryService.checkCategoriesExists() || {};
+            const { data } = await ProductService.checkCategoriesExists() || {};
             if (data) {
-                res.set("x-total-count", String(data.categoryCount));
+                res.set("x-total-count", String(data.ProductCount));
                 if (data.lastUpdatedTime) {
                     res.set("last-modified", data.lastUpdatedTime.toUTCString());
                 }
@@ -128,4 +128,4 @@ class CategoryController {
     }
 }
 
-export const categoryController = new CategoryController();
+export const productController = new ProductController();

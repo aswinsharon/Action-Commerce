@@ -3,8 +3,11 @@ import categoryService from '../service/category.service';
 import { Response } from '../common/dtos/success.response';
 import { ErrorResponse } from '../common/dtos/error.response';
 import HTTP_STATUS from '../common/constants/httpStatus';
+import { LogMethod } from "../common/decorators/logger.decorators";
 
 class CategoryController {
+
+    @LogMethod('DEBUG')
     async getAllCategories(_req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const result = await categoryService.getAllCategories();
@@ -15,6 +18,7 @@ class CategoryController {
         return null;
     }
 
+    @LogMethod('DEBUG')
     async getCategoryById(req: express.Request, res: express.Response, next: express.NextFunction) {
         const { categoryId } = req.params;
         try {
@@ -33,6 +37,7 @@ class CategoryController {
         return null;
     }
 
+    @LogMethod('DEBUG')
     async createCategory(req: express.Request, res: express.Response, next: express.NextFunction) {
         const data = req.body;
         const clientId = Array.isArray(req.headers['x-client-id']) ? req.headers['x-client-id'][0] : req.headers['x-client-id'] ?? '';
@@ -52,8 +57,9 @@ class CategoryController {
         return null;
     }
 
+    @LogMethod('DEBUG')
     async updateCategoryById(req: express.Request, res: express.Response, next: express.NextFunction) {
-        const { categoryId } = req.params;
+        const { categoryId } = req.params || {};
         const updateInfo = req.body;
         try {
             const result = await categoryService.updateCategoryById(categoryId, updateInfo);
@@ -78,6 +84,7 @@ class CategoryController {
         return null;
     }
 
+    @LogMethod('DEBUG')
     async deleteCategoryById(req: express.Request, res: express.Response, next: express.NextFunction) {
         const { categoryId } = req.params;
         try {
@@ -96,6 +103,7 @@ class CategoryController {
         return null;
     }
 
+    @LogMethod('DEBUG')
     async checkCategoryExistsById(req: express.Request, res: express.Response, next: express.NextFunction) {
         const { categoryId } = req.params;
         try {
@@ -111,6 +119,7 @@ class CategoryController {
         return null;
     }
 
+    @LogMethod('DEBUG')
     async checkCategoriesExists(_req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const { data } = await categoryService.checkCategoriesExists() || {};
