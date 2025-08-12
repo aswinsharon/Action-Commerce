@@ -8,6 +8,9 @@ export class DatabaseConfig extends EventEmitter {
 
     private buildMongoUri(): string {
         if (process.env.MONGO_URI) {
+            if (process.env.MONGO_AUTH_SOURCE) {
+                return process.env.MONGO_URI + `/${process.env.MONGO_DATABASE_NAME || 'ms_action_categories_db'}?authSource=${process.env.MONGO_AUTH_SOURCE}`;
+            }
             return process.env.MONGO_URI + `/${process.env.MONGO_DATABASE_NAME || 'ms_action_categories_db'}`;
         } else {
             throw new Error("MONGO_URI is not defined in the environment variables.");

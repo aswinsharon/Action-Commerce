@@ -58,8 +58,8 @@ function loadServices() {
             { host: 'localhost', port: 3008 }
         ],
         '/categories': [
-            { host: 'localhost', port: 3009 },
-            { host: 'localhost', port: 3010 }
+            { host: 'localhost', port: 6001 },
+            { host: 'localhost', port: 6002 }
         ]
     };
 }
@@ -169,16 +169,6 @@ function getNextInstance(pathKey, tried = [], req, res) {
     const selectedIdx = available[roundRobinIndex[pathKey]];
     return { target: targets[selectedIdx], index: selectedIdx };
 }
-
-/**
- * Proxies a request to the selected service instance.
- * Retries on failure up to MAX_RETRIES, trying other instances.
- * 
- * @param {http.IncomingMessage} req - Incoming client request
- * @param {http.ServerResponse} res - Outgoing server response
- * @param {string} pathKey - Service path to route
- * @param {number[]} tried - Array of instance indices already attempted
- */
 
 /**
  * Proxies a request to the selected service instance with automatic failover and retry logic.

@@ -17,7 +17,7 @@ export const errorHandler = (
     const extra = err?.extra || null;
 
     const response = new ErrorResponse(statusCode, message, code, null, extra);
-
+    console.log(err)
     logger.error(`Error occurred: ${JSON.stringify(err.message || err)}`);
 
     return res.status(statusCode).json(response);

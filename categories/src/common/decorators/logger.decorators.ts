@@ -1,9 +1,41 @@
 // log.decorator.ts
 import { Logger, LogLevel } from '../loggers/logger';
 
-const logger = new Logger(); // Optional: pass filename if needed
+const logger = new Logger();
 
-export function LogMethod(level: LogLevel = 'INFO') {
+function safeSerializeArgs(args: any[]) {
+    return args.map(arg => {
+        // Detect Express request
+        if (arg?.constructor?.name === 'IncomingMessage' && arg.method && arg.url) {
+            return {
+                method: arg.method,
+                url: arg.originalUrl || arg.url,
+                params: arg.params,
+                query: arg.query,
+                body: arg.body
+            };
+        }
+
+        // Detect Express response
+        if (arg?.constructor?.name === 'ServerResponse') {
+            return '[ServerResponse]';
+        }
+
+        // Detect errors
+        if (arg instanceof Error) {
+            return { message: arg.message, stack: arg.stack };
+        }
+
+        // Try safe stringify for other objects
+        try {
+            return JSON.parse(JSON.stringify(arg));
+        } catch {
+            return '[Unserializable]';
+        }
+    });
+}
+
+export function LogMethod(level: LogLevel = 'DEBUG') {
     return function (
         target: any,
         propertyName: string,
@@ -12,7 +44,8 @@ export function LogMethod(level: LogLevel = 'INFO') {
         const originalMethod = descriptor.value;
 
         descriptor.value = function (...args: any[]) {
-            logger.log(`Called ${propertyName} with args: ${JSON.stringify(args)}`, level);
+            const safeArgs = safeSerializeArgs(args);
+            logger.log(`Called ${propertyName} with args: ${JSON.stringify(safeArgs)}`, level);
 
             try {
                 const result = originalMethod.apply(this, args);
@@ -20,7 +53,14 @@ export function LogMethod(level: LogLevel = 'INFO') {
                 if (result instanceof Promise) {
                     return result
                         .then(res => {
-                            logger.log(`Returned from ${propertyName}: ${JSON.stringify(res)}`, level);
+                            const safeRes = (() => {
+                                try {
+                                    return JSON.parse(JSON.stringify(res));
+                                } catch {
+                                    return '[Unserializable result]';
+                                }
+                            })();
+                            logger.log(`Returned from ${propertyName}: ${JSON.stringify(safeRes)}`, level);
                             return res;
                         })
                         .catch(err => {
@@ -28,7 +68,14 @@ export function LogMethod(level: LogLevel = 'INFO') {
                             throw err;
                         });
                 } else {
-                    logger.log(`Returned from ${propertyName}: ${JSON.stringify(result)}`, level);
+                    const safeRes = (() => {
+                        try {
+                            return JSON.parse(JSON.stringify(result));
+                        } catch {
+                            return '[Unserializable result]';
+                        }
+                    })();
+                    logger.log(`Returned from ${propertyName}: ${JSON.stringify(safeRes)}`, level);
                     return result;
                 }
             } catch (err: any) {
