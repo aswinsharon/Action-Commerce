@@ -1,5 +1,5 @@
 import { buildCreateBodyObject } from '../common/utils/utilities';
-import category from '../models/productSchema';
+import category from '../models/baseProductSchema';
 import { CategoryBody } from '../common/dtos/category';
 import HTTP_STATUS from '../common/constants/httpStatus';
 

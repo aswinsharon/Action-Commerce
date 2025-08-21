@@ -7,6 +7,14 @@ const productSchema = new Schema({
         default: uuidv4,
         required: true
     },
+    categories: {
+        type: [String],
+        required: true
+    },
+    deployOnSave: {
+        type: Boolean,
+        default: false
+    },
     version: {
         type: Number,
         required: true

@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const ProductImageSchema = new mongoose.Schema({
+const ProductVariantSchema = new mongoose.Schema({
     productId: {
         type: String,
         ref: 'Product',
@@ -11,4 +11,4 @@ const ProductImageSchema = new mongoose.Schema({
     alt: String,
 });
 
-module.exports = mongoose.model('ProductImage', ProductImageSchema);
+module.exports = mongoose.model('ProductImage', ProductVariantSchema);
