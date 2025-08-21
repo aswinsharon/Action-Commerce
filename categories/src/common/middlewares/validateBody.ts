@@ -9,9 +9,10 @@ const logger = new Logger();
  * @param schema Joi object schema
  */
 export function validateBody(schema: ObjectSchema) {
+    console.log("Setting up body validation middleware with schema:", schema.describe());
     return (req: Request, res: Response, next: NextFunction): void => {
-        const { error } = schema.validate(req.body, { abortEarly: false });
-
+        const { error, value } = schema.validate(req.body, { abortEarly: false });
+        console.log("Validating request body:", error);
         if (error) {
             const errors = error.details.map((detail: ValidationErrorItem) => ({
                 code: "InvalidJsonInput",
@@ -28,7 +29,7 @@ export function validateBody(schema: ObjectSchema) {
             });
             return;
         }
-
+        req.body = value
         next();
     };
 }

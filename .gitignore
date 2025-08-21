@@ -27,7 +27,6 @@ coverage/
 *.seed
 
 # Files
-
 package-lock.json
 .env.local
-.env
+.env.*

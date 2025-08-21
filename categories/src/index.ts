@@ -15,8 +15,8 @@ const logger = new Logger();
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.use('/categories', route);
 app.use(errorHandler);
+app.use('/categories', route);
 
 dataBaseConfig.on("connected", () => {
     logger.info("MongoDB connected successfully!");
