@@ -2,8 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import serverless from "serverless-http";
 import dotenv from 'dotenv';
-import authRoutes from './routes/auth.route';
-import userRoutes from './routes/user.route';
+import cartRoutes from './routes/cart.route';
 import { DatabaseConfig } from './common/config/database.config';
 import { errorHandler } from './common/middlewares/errorHandler';
 import { Logger } from './common/loggers/logger';
@@ -18,20 +17,19 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(errorHandler);
 
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
+app.use('/carts', cartRoutes);
 
 dataBaseConfig.on("connected", () => {
-    logger.info("PostgreSQL connected successfully!");
+    logger.info("MongoDB connected successfully!");
 });
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 6001;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 6004;
 
 const startServer = async () => {
     try {
         await dataBaseConfig.connect();
         app.listen(PORT, () => {
-            logger.info(`User Management Service is running on port ${PORT}`);
+            logger.info(`Cart Service is running on port ${PORT}`);
         });
     } catch (err) {
         logger.error(`Failed to start server: ${err}`);
@@ -40,11 +38,11 @@ const startServer = async () => {
 };
 
 const gracefulShutdown = async () => {
-    logger.info("Shutting down server and closing PostgreSQL connection...");
+    logger.info("Shutting down server and closing MongoDB connection...");
     try {
         await dataBaseConfig.closeConnection();
     } catch (err) {
-        logger.error(`Error during PostgreSQL shutdown: ${err}`);
+        logger.error(`Error during MongoDB shutdown: ${err}`);
     }
     process.exit(0);
 };

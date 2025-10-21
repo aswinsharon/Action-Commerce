@@ -1,7 +1,7 @@
 {
-  "name": "categories",
+  "name": "products",
   "version": "1.0.0",
-  "description": "",
+  "description": "Products microservice for e-commerce platform",
   "main": "index.js",
   "scripts": {
     "clean": "echo 'Cleaning build...' && rimraf build:*",
@@ -15,7 +15,11 @@
     "build:main": "tsc -p tsconfig.json",
     "test": "jest"
   },
-  "keywords": [],
+  "keywords": [
+    "products",
+    "catalog",
+    "microservice"
+  ],
   "author": "Aswin Sharon",
   "license": "ISC",
   "dependencies": {
@@ -26,6 +30,7 @@
     "express": "^5.1.0",
     "joi": "^17.13.3",
     "mongoose": "^8.16.4",
+    "axios": "^1.6.2",
     "nodemon": "^3.1.10",
     "serverless": "^3.40.0",
     "serverless-http": "^3.2.0",

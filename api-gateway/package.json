@@ -1,20 +1,27 @@
 {
-  "name": "headless-ecommerce",
+  "name": "api-gateway",
   "version": "1.0.0",
-  "description": "",
+  "description": "API Gateway for microservices",
   "main": "index.js",
   "scripts": {
-    "dev": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "api-gateway",
+    "microservices"
+  ],
+  "author": "Aswin Sharon",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.10.0",
-    "cors": "^2.8.5",
     "express": "^5.1.0",
-    "http-proxy": "^1.18.1",
-    "mongoose": "^8.16.3",
+    "cors": "^2.8.5",
+    "http-proxy-middleware": "^2.0.6",
+    "dotenv": "^17.2.1",
+    "axios": "^1.10.0"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.10"
   }
 }
