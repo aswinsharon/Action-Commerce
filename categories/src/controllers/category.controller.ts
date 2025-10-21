@@ -8,9 +8,12 @@ import { LogMethod } from "../common/decorators/logger.decorators";
 class CategoryController {
 
     @LogMethod('DEBUG')
-    async getAllCategories(_req: express.Request, res: express.Response, next: express.NextFunction) {
+    async getAllCategories(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            const result = await categoryService.getAllCategories();
+            const { page, pageSize } = req.query || {};
+            const pageNum = page ? parseInt(page as string, 10) : undefined;
+            const pageSizeNum = pageSize ? parseInt(pageSize as string, 10) : undefined;
+            const result = await categoryService.getAllCategories(pageNum, pageSizeNum);
             res.status(HTTP_STATUS.OK).json(new Response(result));
         } catch (error) {
             next(error);

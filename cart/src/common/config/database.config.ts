@@ -69,7 +69,7 @@ export class DatabaseConfig extends EventEmitter {
         const {
             MONGO_USER,
             MONGO_PASSWORD,
-            MONGO_DB = 'ms_action_products_db',
+            MONGO_DB = 'ms_action_cart_db',
             MONGO_AUTH_SOURCE = 'admin'
         } = process.env;
 

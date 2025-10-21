@@ -53,8 +53,9 @@ class CategoryService {
         return { status: HTTP_STATUS.OK, code: "Success", data: total };
     }
 
-    static async getAllCategories(projection: Record<string, unknown> | null = null): Promise<ServiceResponse<any>> {
-        const limit = 20, offset = 0;
+    static async getAllCategories(page = 0, pageSize = 10, projection: Record<string, unknown> | null = null): Promise<ServiceResponse<any>> {
+        const limit = pageSize > 0 ? pageSize : 10;
+        const offset = page > 0 ? (page - 1) * limit : 0;
         const categories = await category.find({}, projection || {})
             .sort({ createdAt: -1 })
             .skip(offset)
@@ -62,10 +63,14 @@ class CategoryService {
             .exec();
         const results = categories.map(CategoryService.formatCategory);
         const totalRes = await CategoryService.countCategories();
+        const totalPages = totalRes.data && limit ? Math.ceil(totalRes.data / limit) : 0;
+        if (page > totalPages && totalPages > 0) {
+            page = totalPages;
+        }
         return {
             status: HTTP_STATUS.OK,
             code: "Success",
-            data: { limit, offset, count: results.length, total: totalRes.data, results }
+            data: { page, pageSize: results.length, totalPages, total: totalRes.data, results }
         };
     }
 

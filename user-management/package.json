@@ -1,7 +1,7 @@
 {
-  "name": "user-management-service",
+  "name": "user-management",
   "version": "1.0.0",
-  "description": "",
+  "description": "User management microservice with authentication and role-based access",
   "main": "index.js",
   "scripts": {
     "clean": "echo 'Cleaning build...' && rimraf build:*",
@@ -15,16 +15,24 @@
     "build:main": "tsc -p tsconfig.json",
     "test": "jest"
   },
-  "keywords": [],
+  "keywords": [
+    "authentication",
+    "user-management",
+    "microservice"
+  ],
   "author": "Aswin Sharon",
   "license": "ISC",
   "dependencies": {
+    "chalk": "^5.4.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "dotenv-cli": "^10.0.0",
     "express": "^5.1.0",
     "joi": "^17.13.3",
-    "mongoose": "^8.16.4",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "sequelize": "^6.35.0",
     "nodemon": "^3.1.10",
     "serverless": "^3.40.0",
     "serverless-http": "^3.2.0",
@@ -34,8 +42,10 @@
     "@eslint/json": "^0.13.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/mongoose": "^5.11.97",
     "@types/node": "^24.1.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/pg": "^8.10.9",
     "copyfiles": "^2.4.1",
     "eslint": "^9.32.0",
     "globals": "^16.3.0",

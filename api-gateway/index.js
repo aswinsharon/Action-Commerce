@@ -1,38 +1,79 @@
 const express = require('express');
-const http = require('http-proxy');
 const cors = require('cors');
+const { createProxyMiddleware } = require('http-proxy-middleware');
+require('dotenv').config();
 
-const server = express();
-const proxy = http.createProxyServer();
+const app = express();
 
-server.use(express.json());
-server.use(express.urlencoded({ extended: true }))
-server.use(cors());
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use("/products", (req, res) => {
-    proxy.web(req, res, {
-        target: "http://localhost:6001"
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'OK',
+        message: 'API Gateway is running',
+        timestamp: new Date().toISOString()
     });
 });
 
-app.use("/carts", (req, res) => {
-    proxy.web(req, res, {
-        target: "http://localhost:6002"
+// Proxy configurations for microservices
+const services = {
+    auth: {
+        target: process.env.USER_MANAGEMENT_URL || 'http://localhost:6001',
+        pathRewrite: { '^/auth': '/auth' }
+    },
+    users: {
+        target: process.env.USER_MANAGEMENT_URL || 'http://localhost:6001',
+        pathRewrite: { '^/users': '/users' }
+    },
+    products: {
+        target: process.env.PRODUCTS_SERVICE_URL || 'http://localhost:6002',
+        pathRewrite: { '^/products': '/products' }
+    },
+    categories: {
+        target: process.env.CATEGORIES_SERVICE_URL || 'http://localhost:6003',
+        pathRewrite: { '^/categories': '/categories' }
+    },
+    carts: {
+        target: process.env.CART_SERVICE_URL || 'http://localhost:6004',
+        pathRewrite: { '^/carts': '/carts' }
+    }
+};
+
+// Create proxy middleware for each service
+Object.keys(services).forEach(path => {
+    const config = services[path];
+    app.use(`/${path}`, createProxyMiddleware({
+        target: config.target,
+        changeOrigin: true,
+        pathRewrite: config.pathRewrite,
+        onError: (err, req, res) => {
+            console.error(`Proxy error for ${path}:`, err.message);
+            res.status(503).json({
+                error: 'Service Unavailable',
+                message: `${path} service is currently unavailable`,
+                service: path
+            });
+        },
+        onProxyReq: (proxyReq, req, res) => {
+            console.log(`Proxying ${req.method} ${req.url} to ${config.target}`);
+        }
+    }));
+});
+
+// Catch-all for undefined routes
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'Not Found',
+        message: 'The requested endpoint does not exist',
+        availableServices: Object.keys(services)
     });
 });
 
-app.use("/orders", (req, res) => {
-    proxy.web(req, res, {
-        target: "http://localhost:6003"
-    });
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`API Gateway running on port ${PORT}`);
+    console.log('Available services:', Object.keys(services));
 });
-
-app.use("/payments", (req, res) => {
-    proxy.web(req, res, {
-        target: "http://localhost:6004"
-    });
-});
-
-server.listen(3000, () => {
-    console.log("server started 🚀")
-})
