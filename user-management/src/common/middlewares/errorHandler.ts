@@ -4,7 +4,10 @@ import { Logger } from "../loggers/logger";
 
 const logger = new Logger();
 
-export const errorHandler = (err: any, _req: Request, res: Response, _next: NextFunction): Response => {
+export const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction): Response => {
+    // Log the full error details for debugging
+    logger.error(`Error occurred on ${req.method} ${req.path}: ${err.stack || err.message || err}`);
+
     if (err instanceof SyntaxError && 'body' in err) {
         logger.error(`Invalid JSON: ${err.message}`);
         return res.status(400).json(
@@ -17,13 +20,14 @@ export const errorHandler = (err: any, _req: Request, res: Response, _next: Next
         );
     }
 
+    // Don't expose internal error details in production
     const statusCode = 500;
-    const message = "Internal Server Error";
+    const message = process.env.NODE_ENV === 'production'
+        ? "Internal Server Error"
+        : err.message || "Internal Server Error";
     const code = "InternalServerError";
-    const extra = err?.extra || null;
 
-    const response = new ErrorResponse(statusCode, message, code, null, extra);
-    logger.error(`Error occurred: ${JSON.stringify(err.message || err)}`);
+    const response = new ErrorResponse(statusCode, message, code);
 
     return res.status(statusCode).json(response);
 };

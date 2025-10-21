@@ -18,10 +18,10 @@ class AuthController {
                 );
             }
 
-            res.status(HTTP_STATUS.CREATED).json(new Response(result));
+            return res.status(HTTP_STATUS.CREATED).json(new Response(result));
         } catch (error) {
             logger.error(`Registration error: ${error}`);
-            next(error);
+            return next(error);
         }
     }
 
@@ -35,10 +35,10 @@ class AuthController {
                 );
             }
 
-            res.status(HTTP_STATUS.OK).json(new Response(result));
+            return res.status(HTTP_STATUS.OK).json(new Response(result));
         } catch (error) {
             logger.error(`Login error: ${error}`);
-            next(error);
+            return next(error);
         }
     }
 
@@ -59,10 +59,10 @@ class AuthController {
                 );
             }
 
-            res.status(HTTP_STATUS.OK).json(new Response(result));
+            return res.status(HTTP_STATUS.OK).json(new Response(result));
         } catch (error) {
             logger.error(`Token verification error: ${error}`);
-            next(error);
+            return next(error);
         }
     }
 }

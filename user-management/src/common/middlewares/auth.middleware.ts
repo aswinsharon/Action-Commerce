@@ -26,7 +26,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
         req.user = decoded;
-        next();
+        return next();
     } catch (error) {
         logger.error(`Token verification failed: ${error}`);
         return res.status(403).json(
@@ -49,6 +49,6 @@ export const authorizeRoles = (...roles: string[]) => {
             );
         }
 
-        next();
+        return next();
     };
 };
