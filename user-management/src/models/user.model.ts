@@ -12,7 +12,16 @@ export interface UserAttributes {
     updatedAt?: Date;
 }
 
-export class User extends Model<UserAttributes> implements UserAttributes {
+export interface UserCreationAttributes {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    role?: 'admin' | 'customer' | 'manager';
+    isActive?: boolean;
+}
+
+export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
     public id!: string;
     public email!: string;
     public password!: string;

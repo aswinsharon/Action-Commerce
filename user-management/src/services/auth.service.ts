@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/user.model';
+import { User, UserCreationAttributes } from '../models/user.model';
 import HTTP_STATUS from '../common/constants/httpStatus';
 
 interface ServiceResponse<T> {
@@ -15,13 +15,7 @@ interface LoginData {
     password: string;
 }
 
-interface RegisterData {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    role?: 'admin' | 'customer' | 'manager';
-}
+interface RegisterData extends UserCreationAttributes { }
 
 interface AuthResponse {
     user: {
@@ -35,6 +29,14 @@ interface AuthResponse {
 }
 
 class AuthService {
+    private static getJwtSecret(): string {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET environment variable is not defined');
+        }
+        return secret;
+    }
+
     static async register(data: RegisterData): Promise<ServiceResponse<AuthResponse | null>> {
         try {
             const existingUser = await User.findOne({ where: { email: data.email } });
@@ -49,15 +51,18 @@ class AuthService {
 
             const hashedPassword = await bcrypt.hash(data.password, 12);
             const user = await User.create({
-                ...data,
+                email: data.email,
                 password: hashedPassword,
-                role: data.role || 'customer'
+                firstName: data.firstName,
+                lastName: data.lastName,
+                role: data.role || 'customer',
+                isActive: true
             });
 
             const token = jwt.sign(
                 { id: user.id, email: user.email, role: user.role },
-                process.env.JWT_SECRET!,
-                { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+                this.getJwtSecret(),
+                { expiresIn: process.env.JWT_EXPIRES_IN || '24h' } as jwt.SignOptions
             );
 
             return {
@@ -75,10 +80,13 @@ class AuthService {
                 }
             };
         } catch (error: any) {
+            console.error('Registration error:', error);
             return {
                 status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
                 code: 'InternalServerError',
-                message: error.message,
+                message: process.env.NODE_ENV === 'production'
+                    ? 'Registration failed'
+                    : error.message,
                 data: null
             };
         }
@@ -108,8 +116,8 @@ class AuthService {
 
             const token = jwt.sign(
                 { id: user.id, email: user.email, role: user.role },
-                process.env.JWT_SECRET!,
-                { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+                this.getJwtSecret(),
+                { expiresIn: process.env.JWT_EXPIRES_IN || '24h' } as jwt.SignOptions
             );
 
             return {
@@ -127,10 +135,13 @@ class AuthService {
                 }
             };
         } catch (error: any) {
+            console.error('Login error:', error);
             return {
                 status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
                 code: 'InternalServerError',
-                message: error.message,
+                message: process.env.NODE_ENV === 'production'
+                    ? 'Login failed'
+                    : error.message,
                 data: null
             };
         }
@@ -138,7 +149,7 @@ class AuthService {
 
     static async verifyToken(token: string): Promise<ServiceResponse<any>> {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+            const decoded = jwt.verify(token, this.getJwtSecret()) as any;
             const user = await User.findByPk(decoded.id);
 
             if (!user || !user.isActive) {
