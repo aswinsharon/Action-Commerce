@@ -5,23 +5,27 @@ const router = express.Router();
 
 /**
  * GET /
- * Get all products (public access)
+ * Get all products (authenticated)
  */
-router.get('/', (req, res) => {
+router.get('/', authenticateToken, (req, res) => {
     res.json({
         message: 'Products endpoint - Get all products',
-        query: req.query
+        query: req.query,
+        user: (req as any).user,
+        clientId: (req as any).clientId
     });
 });
 
 /**
  * GET /:productId
- * Get product by ID (public access)
+ * Get product by ID (authenticated)
  */
-router.get('/:productId', (req, res) => {
+router.get('/:productId', authenticateToken, (req, res) => {
     res.json({
         message: `Get product ${req.params.productId}`,
-        productId: req.params.productId
+        productId: req.params.productId,
+        user: (req as any).user,
+        clientId: (req as any).clientId
     });
 });
 

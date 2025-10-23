@@ -44,6 +44,14 @@ class AuthController {
 
     async verifyToken(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
+            // Check for clientId header (like commercetools)
+            const clientId = req.headers['x-client-id'] as string;
+            if (!clientId) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json(
+                    new ErrorResponse(HTTP_STATUS.BAD_REQUEST, 'x-client-id header is required', 'MissingClientId')
+                );
+            }
+
             const token = req.headers.authorization?.split(' ')[1];
             if (!token) {
                 return res.status(HTTP_STATUS.UNAUTHORIZED).json(
@@ -54,12 +62,26 @@ class AuthController {
             const result = await AuthService.verifyToken(token);
 
             if (result.code === 'InvalidToken') {
-                return res.status(HTTP_STATUS.UNAUTHORIZED).json(
-                    new ErrorResponse(HTTP_STATUS.UNAUTHORIZED, result.message!, result.code)
-                );
+                return res.status(HTTP_STATUS.UNAUTHORIZED).json({
+                    statusCode: HTTP_STATUS.UNAUTHORIZED,
+                    message: result.message!,
+                    errors: [{
+                        code: result.code,
+                        message: result.message!
+                    }]
+                });
             }
 
-            return res.status(HTTP_STATUS.OK).json(new Response(result));
+            // Include clientId in response for logging/tracking
+            const responseData = {
+                ...result.data,
+                clientId: clientId
+            };
+
+            return res.status(HTTP_STATUS.OK).json(new Response({
+                ...result,
+                data: responseData
+            }));
         } catch (error) {
             logger.error(`Token verification error: ${error}`);
             return next(error);

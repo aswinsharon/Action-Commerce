@@ -1,0 +1,1275 @@
+{
+    "info": {
+        "_postman_id": "action-commerce-api-collection",
+        "name": "Action Commerce - Microservices API Collection",
+        "description": "Complete API collection for Action Commerce microservices with authentication and clientId validation",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{auth_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Auto-set clientId header for all requests",
+                    "pm.request.headers.add({",
+                    "    key: 'x-client-id',",
+                    "    value: pm.environment.get('client_id') || 'postman-test-client'",
+                    "});"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "user_management_url",
+            "value": "http://localhost:6001",
+            "type": "string"
+        },
+        {
+            "key": "products_url",
+            "value": "http://localhost:6002",
+            "type": "string"
+        },
+        {
+            "key": "categories_url",
+            "value": "http://localhost:6003",
+            "type": "string"
+        },
+        {
+            "key": "cart_url",
+            "value": "http://localhost:6004",
+            "type": "string"
+        },
+        {
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "client_id",
+            "value": "postman-test-client",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "🔐 Authentication",
+            "item": [
+                {
+                    "name": "Register Admin User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.token) {",
+                                    "        pm.environment.set('auth_token', response.data.token);",
+                                    "        pm.environment.set('admin_token', response.data.token);",
+                                    "        console.log('Admin token saved:', response.data.token);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@actioncommerce.com\",\n  \"password\": \"admin123456\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"role\": \"admin\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{user_management_url}}/auth/register",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Register Manager User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.token) {",
+                                    "        pm.environment.set('manager_token', response.data.token);",
+                                    "        console.log('Manager token saved:', response.data.token);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"manager@actioncommerce.com\",\n  \"password\": \"manager123456\",\n  \"firstName\": \"Manager\",\n  \"lastName\": \"User\",\n  \"role\": \"manager\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{user_management_url}}/auth/register",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Register Customer User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.token) {",
+                                    "        pm.environment.set('customer_token', response.data.token);",
+                                    "        console.log('Customer token saved:', response.data.token);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"customer@actioncommerce.com\",\n  \"password\": \"customer123456\",\n  \"firstName\": \"Customer\",\n  \"lastName\": \"User\",\n  \"role\": \"customer\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{user_management_url}}/auth/register",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Admin",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.token) {",
+                                    "        pm.environment.set('auth_token', response.data.token);",
+                                    "        pm.environment.set('admin_token', response.data.token);",
+                                    "        console.log('Admin logged in, token saved:', response.data.token);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@actioncommerce.com\",\n  \"password\": \"admin123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{user_management_url}}/auth/login",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Manager",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.token) {",
+                                    "        pm.environment.set('manager_token', response.data.token);",
+                                    "        console.log('Manager logged in, token saved:', response.data.token);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"manager@actioncommerce.com\",\n  \"password\": \"manager123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{user_management_url}}/auth/login",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Login Customer",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data.token) {",
+                                    "        pm.environment.set('customer_token', response.data.token);",
+                                    "        console.log('Customer logged in, token saved:', response.data.token);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"customer@actioncommerce.com\",\n  \"password\": \"customer123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{user_management_url}}/auth/login",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Verify Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{user_management_url}}/auth/verify",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "verify"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "👤 User Management",
+            "item": [
+                {
+                    "name": "Get User Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{user_management_url}}/users/profile",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "profile"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin Only Endpoint",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{user_management_url}}/users/admin",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Manager Endpoint",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{manager_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{user_management_url}}/users/manager",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "manager"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Test Endpoint (No Auth)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{user_management_url}}/users/test",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "test"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "📂 Categories",
+            "item": [
+                {
+                    "name": "Get All Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{categories_url}}/categories?page=1&pageSize=10",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "pageSize",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Category by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{categories_url}}/categories/{{category_id}}",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Category (Admin/Manager)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    if (response.data && response.data._id) {",
+                                    "        pm.environment.set('category_id', response.data._id);",
+                                    "        console.log('Category created with ID:', response.data._id);",
+                                    "    }",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": {\n    \"en\": \"Electronics\",\n    \"es\": \"Electrónicos\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{categories_url}}/categories",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Category (Admin/Manager)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"version\": 1,\n  \"actions\": [\n    {\n      \"action\": \"changeName\",\n      \"name\": {\n        \"en\": \"Consumer Electronics\",\n        \"es\": \"Electrónicos de Consumo\"\n      }\n    }\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{categories_url}}/categories/{{category_id}}",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Category (Admin Only)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{categories_url}}/categories/{{category_id}}",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "{{category_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Check Categories Exist (HEAD)",
+                    "request": {
+                        "method": "HEAD",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{categories_url}}/categories",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🛍️ Products",
+            "item": [
+                {
+                    "name": "Get All Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{products_url}}/products?page=1&limit=10",
+                            "host": [
+                                "{{products_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Product by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{products_url}}/products/{{product_id}}",
+                            "host": [
+                                "{{products_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{product_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Product (Admin/Manager)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    // For demo purposes, set a sample product ID",
+                                    "    pm.environment.set('product_id', 'sample-product-123');",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": {\n    \"en\": \"Premium Wireless Headphones\"\n  },\n  \"description\": {\n    \"en\": \"High-quality wireless headphones with noise cancellation\"\n  },\n  \"masterVariant\": {\n    \"sku\": \"WH-1000XM4\",\n    \"prices\": [\n      {\n        \"value\": {\n          \"centAmount\": 34999,\n          \"currencyCode\": \"EUR\"\n        }\n      }\n    ]\n  },\n  \"categories\": [\n    {\n      \"id\": \"{{category_id}}\",\n      \"typeId\": \"category\"\n    }\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{products_url}}/products",
+                            "host": [
+                                "{{products_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Product (Admin/Manager)",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": {\n    \"en\": \"Premium Wireless Headphones - Updated\"\n  },\n  \"description\": {\n    \"en\": \"Updated description for premium wireless headphones\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{products_url}}/products/{{product_id}}",
+                            "host": [
+                                "{{products_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{product_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Product (Admin Only)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{products_url}}/products/{{product_id}}",
+                            "host": [
+                                "{{products_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "{{product_id}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🛒 Cart",
+            "item": [
+                {
+                    "name": "Get User Cart",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{customer_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{cart_url}}/carts",
+                            "host": [
+                                "{{cart_url}}"
+                            ],
+                            "path": [
+                                "carts"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Create Cart",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    // For demo purposes, set a sample cart ID",
+                                    "    pm.environment.set('cart_id', 'sample-cart-123');",
+                                    "    pm.environment.set('line_item_id', 'sample-line-item-456');",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{customer_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"currency\": \"EUR\",\n  \"customerId\": \"customer-123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{cart_url}}/carts",
+                            "host": [
+                                "{{cart_url}}"
+                            ],
+                            "path": [
+                                "carts"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Cart by ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{customer_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{cart_url}}/carts/{{cart_id}}",
+                            "host": [
+                                "{{cart_url}}"
+                            ],
+                            "path": [
+                                "carts",
+                                "{{cart_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Add Item to Cart",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{customer_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"variantId\": 1,\n  \"quantity\": 2,\n  \"sku\": \"WH-1000XM4\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{cart_url}}/carts/{{cart_id}}/line-items",
+                            "host": [
+                                "{{cart_url}}"
+                            ],
+                            "path": [
+                                "carts",
+                                "{{cart_id}}",
+                                "line-items"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Remove Item from Cart",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{customer_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{cart_url}}/carts/{{cart_id}}/line-items/{{line_item_id}}",
+                            "host": [
+                                "{{cart_url}}"
+                            ],
+                            "path": [
+                                "carts",
+                                "{{cart_id}}",
+                                "line-items",
+                                "{{line_item_id}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Carts (Admin Only)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{admin_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{cart_url}}/carts/admin/all",
+                            "host": [
+                                "{{cart_url}}"
+                            ],
+                            "path": [
+                                "carts",
+                                "admin",
+                                "all"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🌐 API Gateway Tests",
+            "item": [
+                {
+                    "name": "Gateway Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Categories via Gateway",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Products via Gateway",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/products",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Cart via Gateway",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{customer_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/carts",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "carts"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Auth via Gateway",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@actioncommerce.com\",\n  \"password\": \"admin123456\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "❌ Error Testing",
+            "item": [
+                {
+                    "name": "Missing Client ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{categories_url}}/categories",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Missing Authorization",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{categories_url}}/categories",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Invalid Token",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer invalid-token-123"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{categories_url}}/categories",
+                            "host": [
+                                "{{categories_url}}"
+                            ],
+                            "path": [
+                                "categories"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Customer Accessing Admin Endpoint",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{customer_token}}"
+                            },
+                            {
+                                "key": "x-client-id",
+                                "value": "{{client_id}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{user_management_url}}/users/admin",
+                            "host": [
+                                "{{user_management_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "admin"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
