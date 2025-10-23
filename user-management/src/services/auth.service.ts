@@ -31,6 +31,8 @@ interface AuthResponse {
 class AuthService {
     private static getJwtSecret(): string {
         const secret = process.env.JWT_SECRET;
+        console.log('JWT_SECRET loaded:', secret ? 'Yes' : 'No');
+        console.log('JWT_SECRET value:', secret);
         if (!secret) {
             throw new Error('JWT_SECRET environment variable is not defined');
         }
@@ -149,10 +151,15 @@ class AuthService {
 
     static async verifyToken(token: string): Promise<ServiceResponse<any>> {
         try {
+            console.log('Verifying token:', token.substring(0, 20) + '...');
             const decoded = jwt.verify(token, this.getJwtSecret()) as any;
+            console.log('Token decoded successfully:', { id: decoded.id, email: decoded.email });
+
             const user = await User.findByPk(decoded.id);
+            console.log('User found:', user ? { id: user.id, email: user.email, isActive: user.isActive } : 'null');
 
             if (!user || !user.isActive) {
+                console.log('User not found or inactive');
                 return {
                     status: HTTP_STATUS.UNAUTHORIZED,
                     code: 'InvalidToken',
@@ -161,6 +168,7 @@ class AuthService {
                 };
             }
 
+            console.log('Token verification successful');
             return {
                 status: HTTP_STATUS.OK,
                 code: 'Success',
@@ -171,6 +179,7 @@ class AuthService {
                 }
             };
         } catch (error: any) {
+            console.error('Token verification error:', error.message);
             return {
                 status: HTTP_STATUS.UNAUTHORIZED,
                 code: 'InvalidToken',

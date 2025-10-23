@@ -8,7 +8,18 @@ const router = express.Router();
  * Get current user profile (authenticated users only)
  */
 router.get('/profile', authenticateToken, (req: any, res) => {
-    res.json({ user: req.user });
+    res.json({
+        message: 'Profile accessed successfully',
+        user: req.user
+    });
+});
+
+/**
+ * GET /test
+ * Test endpoint without authentication
+ */
+router.get('/test', (req, res) => {
+    res.json({ message: 'This endpoint does not require authentication' });
 });
 
 /**

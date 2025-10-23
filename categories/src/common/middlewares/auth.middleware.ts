@@ -55,7 +55,7 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
         req.user = response.data.data;
         req.clientId = clientId;
         logger.info(`Token verified successfully for user: ${req.user?.email} with clientId: ${clientId}`);
-        next();
+        return next();
     } catch (error: any) {
         logger.error(`Token verification failed: ${error.message}`);
         logger.error(`Full error details:`, error.response?.data || error);
@@ -105,6 +105,6 @@ export const authorizeRoles = (...roles: string[]) => {
             );
         }
 
-        next();
+        return next();
     };
 };
