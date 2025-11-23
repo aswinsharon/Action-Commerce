@@ -58,7 +58,7 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
         return next();
     } catch (error: any) {
         logger.error(`Token verification failed: ${error.message}`);
-        logger.error(`Full error details:`, error.response?.data || error);
+        logger.error(`Full error details: I` + error.response?.data || error);
 
         // Check if it's a network/connection error
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
@@ -75,7 +75,7 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
 
         // Return the actual error from user management service if available
         if (error.response && error.response.data) {
-            logger.error(`Received error from user management service:`, error.response.data);
+            logger.error(`Received error from user management service: ` + error.response.data);
             return res.status(error.response.status || 403).json(error.response.data);
         }
 

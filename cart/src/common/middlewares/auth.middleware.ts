@@ -14,11 +14,11 @@ export interface AuthenticatedRequest extends Request {
     clientId?: string;
 }
 
-export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
     logger.info(`Auth middleware called for ${req.method} ${req.path}`);
 
     // Check for clientId header (like commercetools)
-    const clientId = req.headers['x-client-id'] as string;
+    const clientId = req?.headers['x-client-id'] as string;
     logger.info(`Client ID header: ${clientId ? 'Present' : 'Missing'}`);
 
     if (!clientId) {
@@ -52,14 +52,13 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
             }
         });
 
-        req.user = response.data.data;
+        req.user = response?.data?.data;
         req.clientId = clientId;
-        logger.info(`Token verified successfully for user: ${req.user?.email} with clientId: ${clientId}`);
-        next();
+        logger.info(`Token verified successfully for user: ${req?.user?.email} with clientId: ${clientId}`);
+        return next();
     } catch (error: any) {
         logger.error(`Token verification failed: ${error.message}`);
-        logger.error(`Full error details:`, error.response?.data || error);
-
+        logger.error(`Full error details:` + error.response?.data || error);
         // Check if it's a network/connection error
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
             logger.error('Cannot connect to user management service');
@@ -75,7 +74,7 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
 
         // Return the actual error from user management service if available
         if (error.response && error.response.data) {
-            logger.error(`Received error from user management service:`, error.response.data);
+            logger.error(`Received error from user management service:` + error.response.data);
             return res.status(error.response.status || 403).json(error.response.data);
         }
 
@@ -105,6 +104,6 @@ export const authorizeRoles = (...roles: string[]) => {
             );
         }
 
-        next();
+        return next();
     };
 };
