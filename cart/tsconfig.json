@@ -33,6 +33,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
+    "src/types/**/*.d.ts",
     "src/**/*.js"
   ],
   "exclude": [

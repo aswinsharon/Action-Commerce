@@ -33,6 +33,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
+    "src/types/**/*.d.ts",
     "src/api/v1/services/stockServices.js",
     "src/common/config/Loggers.ts",
     "src/api/v1/resources/*.gql"
