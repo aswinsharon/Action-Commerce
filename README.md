@@ -31,7 +31,30 @@ This project consists of 5 microservices:
 
 ## Quick Start
 
-### 1. Install Dependencies
+### Option 1: Automated Start (Recommended)
+
+Use the provided bash scripts to start all services automatically:
+
+```bash
+# Make scripts executable
+chmod +x start-all-services.sh stop-all-services.sh
+
+# Start all services in new terminal windows
+./start-all-services.sh
+
+# Or start in a tmux session
+./start-all-services-tmux.sh
+
+# Or start in background
+./start-all-services-simple.sh
+
+# Stop all services
+./stop-all-services.sh
+```
+
+### Option 2: Manual Setup
+
+#### 1. Install Dependencies
 
 ```bash
 # Install dependencies for all services
@@ -42,12 +65,18 @@ cd cart && npm install && cd ..
 cd api-gateway && npm install && cd ..
 ```
 
-### 2. Database Setup
+#### 2. Database Setup
 
 **PostgreSQL Setup:**
 ```bash
 # Create database for user management
 createdb ms_action_users_db
+
+# Or using Docker
+docker run -d -p 5432:5432 --name postgres \
+  -e POSTGRES_PASSWORD=your_password \
+  -e POSTGRES_DB=ms_action_users_db \
+  postgres:latest
 ```
 
 **MongoDB Setup:**
@@ -55,129 +84,204 @@ createdb ms_action_users_db
 # Start MongoDB service
 mongod
 
-# Create databases (they will be created automatically on first connection)
+# Or using Docker
+docker run -d -p 27017:27017 --name mongodb mongo:latest
+
+# Databases will be created automatically on first connection:
 # - ms_action_products_db
 # - ms_action_categories_db  
 # - ms_action_cart_db
 ```
 
-### 3. Environment Configuration
+#### 3. Environment Configuration
 
-Each service has its own `.env.local` file with default configurations. Update them as needed:
+Each service needs environment variables configured. See example `.env` files:
 
 - `user-management/.env.local` - PostgreSQL connection and JWT settings
 - `products/.env.local` - MongoDB connection and service URLs
-- `categories/.env.local` - MongoDB connection (already configured)
+- `categories/.env.local` - MongoDB connection
 - `cart/.env.local` - MongoDB connection and service URLs
 - `api-gateway/.env` - Service URLs and gateway port
 
-### 4. Start Services
+#### 4. Start Services Manually
 
 Start each service in separate terminals:
 
 ```bash
 # Terminal 1: User Management Service
-cd user-management && npm run dev
+cd user-management && npm start
 
 # Terminal 2: Products Service  
-cd products && npm run dev
+cd products && npm start
 
 # Terminal 3: Categories Service
-cd categories && npm run dev
+cd categories && npm start
 
 # Terminal 4: Cart Service
-cd cart && npm run dev
+cd cart && npm start
 
 # Terminal 5: API Gateway
-cd api-gateway && npm run dev
+cd api-gateway && npm start
 ```
+
+### Verify Installation
+
+Check if all services are running:
+
+```bash
+# Check API Gateway health
+curl http://localhost:3000/health
+
+# Check all services health
+curl http://localhost:3000/health/services
+```
+
+## Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[API Gateway Architecture](./docs/API-GATEWAY-ARCHITECTURE.md)** - Complete architecture overview, routing, authentication, and error handling
+- **[Endpoint Reference](./docs/ENDPOINT-REFERENCE.md)** - Detailed API endpoint documentation with examples
+- **[Quick Start Guide](./docs/QUICK-START-GUIDE.md)** - Step-by-step setup and testing guide
+- **[Running Services](./docs/RUNNING-SERVICES.md)** - Different methods to start and manage services
+- **[Type Definitions Guide](./TYPE-DEFINITIONS-GUIDE.md)** - TypeScript type definitions and data models
 
 ## API Endpoints
 
-### Authentication (via API Gateway)
+All API requests should go through the API Gateway at `http://localhost:3000/api`
+
+### Authentication
 
 ```bash
 # Register a new user
-POST http://localhost:3000/auth/register
+POST http://localhost:3000/api/auth/register
+Headers: 
+  Content-Type: application/json
+  x-client-id: your-client-id
+Body:
 {
   "email": "user@example.com",
   "password": "password123",
-  "firstName": "John",
-  "lastName": "Doe",
-  "role": "customer"  // optional: "admin", "manager", "customer"
+  "name": "John Doe",
+  "role": "customer"
 }
 
 # Login
-POST http://localhost:3000/auth/login
+POST http://localhost:3000/api/auth/login
+Headers:
+  Content-Type: application/json
+  x-client-id: your-client-id
+Body:
 {
   "email": "user@example.com",
   "password": "password123"
 }
 
 # Verify token
-POST http://localhost:3000/auth/verify
-Headers: Authorization: Bearer <token>
+POST http://localhost:3000/api/auth/verify
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 ```
 
-### Products (via API Gateway)
+### Products
 
 ```bash
-# Get all products (public)
-GET http://localhost:3000/products
+# Get all products (authenticated)
+GET http://localhost:3000/api/products
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 
-# Get product by ID (public)
-GET http://localhost:3000/products/:productId
+# Get product by ID (authenticated)
+GET http://localhost:3000/api/products/:productId
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 
 # Create product (admin/manager only)
-POST http://localhost:3000/products
-Headers: Authorization: Bearer <token>
+POST http://localhost:3000/api/products
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
+  Content-Type: application/json
 
 # Update product (admin/manager only)
-PATCH http://localhost:3000/products/:productId
-Headers: Authorization: Bearer <token>
+PATCH http://localhost:3000/api/products/:productId
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
+  Content-Type: application/json
 
 # Delete product (admin only)
-DELETE http://localhost:3000/products/:productId
-Headers: Authorization: Bearer <token>
+DELETE http://localhost:3000/api/products/:productId
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 ```
 
-### Categories (via API Gateway)
+### Categories
 
 ```bash
-# Get all categories
-GET http://localhost:3000/categories
+# Get all categories (authenticated)
+GET http://localhost:3000/api/categories
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 
-# Get category by ID
-GET http://localhost:3000/categories/:categoryId
+# Get category by ID (authenticated)
+GET http://localhost:3000/api/categories/:categoryId
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 
 # Create category (admin/manager only)
-POST http://localhost:3000/categories
-Headers: Authorization: Bearer <token>
+POST http://localhost:3000/api/categories
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
+  Content-Type: application/json
 ```
 
-### Cart (via API Gateway)
+### Cart
 
 ```bash
 # Get user's cart (authenticated)
-GET http://localhost:3000/carts
-Headers: Authorization: Bearer <token>
+GET http://localhost:3000/api/carts
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 
 # Create cart (authenticated)
-POST http://localhost:3000/carts
-Headers: Authorization: Bearer <token>
+POST http://localhost:3000/api/carts
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
+  Content-Type: application/json
 
 # Add item to cart (authenticated)
-POST http://localhost:3000/carts/:cartId/line-items
-Headers: Authorization: Bearer <token>
+POST http://localhost:3000/api/carts/:cartId/line-items
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
+  Content-Type: application/json
 
 # Remove item from cart (authenticated)
-DELETE http://localhost:3000/carts/:cartId/line-items/:lineItemId
-Headers: Authorization: Bearer <token>
+DELETE http://localhost:3000/api/carts/:cartId/line-items/:lineItemId
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 
 # Get all carts (admin only)
-GET http://localhost:3000/carts/admin/all
-Headers: Authorization: Bearer <token>
+GET http://localhost:3000/api/carts/admin/all
+Headers:
+  Authorization: Bearer <token>
+  x-client-id: your-client-id
 ```
+
+**Note**: All authenticated requests require both `Authorization` and `x-client-id` headers.
+
+For complete API documentation with request/response examples, see [Endpoint Reference](./docs/ENDPOINT-REFERENCE.md).
 
 ## User Roles
 
