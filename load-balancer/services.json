@@ -1,0 +1,32 @@
+{
+    "/auth": [
+        {
+            "host": "localhost",
+            "port": 6001
+        }
+    ],
+    "/users": [
+        {
+            "host": "localhost",
+            "port": 6001
+        }
+    ],
+    "/products": [
+        {
+            "host": "localhost",
+            "port": 6002
+        }
+    ],
+    "/categories": [
+        {
+            "host": "localhost",
+            "port": 6003
+        }
+    ],
+    "/carts": [
+        {
+            "host": "localhost",
+            "port": 6004
+        }
+    ]
+}

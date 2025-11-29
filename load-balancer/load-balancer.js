@@ -18,6 +18,7 @@ const HEALTH_CHECK_INTERVAL = 5000; // ms
 const RATE_LIMIT_WINDOW = 60000; // ms
 const RATE_LIMIT_MAX = 100; // requests per window
 const CACHE_TTL = 10000; // ms
+const CLEANUP_INTERVAL = 60000; // ms
 
 // SSL options (self-signed for demo)
 const sslOptions = {
@@ -39,27 +40,22 @@ function loadServices() {
     if (fs.existsSync('services.json')) {
         return JSON.parse(fs.readFileSync('services.json'));
     }
-    // fallback to hardcoded
+    // fallback to hardcoded - aligned with actual microservices
     return {
+        '/auth': [
+            { host: 'localhost', port: 6001 }
+        ],
+        '/users': [
+            { host: 'localhost', port: 6001 }
+        ],
         '/products': [
-            { host: 'localhost', port: 3001 },
-            { host: 'localhost', port: 3002 }
-        ],
-        '/orders': [
-            { host: 'localhost', port: 3003 },
-            { host: 'localhost', port: 3004 }
-        ],
-        '/carts': [
-            { host: 'localhost', port: 3005 },
-            { host: 'localhost', port: 3006 }
-        ],
-        '/payments': [
-            { host: 'localhost', port: 3007 },
-            { host: 'localhost', port: 3008 }
+            { host: 'localhost', port: 6002 }
         ],
         '/categories': [
-            { host: 'localhost', port: 6001 },
-            { host: 'localhost', port: 6002 }
+            { host: 'localhost', port: 6003 }
+        ],
+        '/carts': [
+            { host: 'localhost', port: 6004 }
         ]
     };
 }
@@ -88,13 +84,25 @@ const cache = {};
  */
 function healthCheck() {
     Object.keys(services).forEach(pathKey => {
-        healthyInstances[pathKey] = [];
+        const tempHealthy = [];
+        let completed = 0;
+        const total = services[pathKey].length;
+
         services[pathKey].forEach((instance, idx) => {
             http.get({ host: instance.host, port: instance.port, path: '/health', timeout: 2000 }, res => {
                 if (res.statusCode === 200) {
-                    healthyInstances[pathKey].push(idx);
+                    tempHealthy.push(idx);
                 }
-            }).on('error', () => { });
+                completed++;
+                if (completed === total) {
+                    healthyInstances[pathKey] = tempHealthy;
+                }
+            }).on('error', () => {
+                completed++;
+                if (completed === total) {
+                    healthyInstances[pathKey] = tempHealthy;
+                }
+            });
         });
     });
 }
@@ -165,7 +173,7 @@ function getNextInstance(pathKey, tried = [], req, res) {
     // Round-robin fallback
     const available = healthy.filter(idx => !tried.includes(idx));
     if (available.length === 0) return null;
-    roundRobinIndex[pathKey] = (roundRobinIndex[pathKey] + 1 || 0) % available.length;
+    roundRobinIndex[pathKey] = ((roundRobinIndex[pathKey] || 0) + 1) % available.length;
     const selectedIdx = available[roundRobinIndex[pathKey]];
     return { target: targets[selectedIdx], index: selectedIdx };
 }
@@ -246,6 +254,27 @@ function rateLimit(req, res) {
 }
 
 /**
+ * Cleans up expired entries from cache and rate limiters to prevent memory leaks.
+ */
+function cleanup() {
+    const now = Date.now();
+    // Clean cache
+    Object.keys(cache).forEach(key => {
+        if (now - cache[key].ts > CACHE_TTL) {
+            delete cache[key];
+        }
+    });
+    // Clean rate limiters
+    Object.keys(rateLimiters).forEach(ip => {
+        rateLimiters[ip] = rateLimiters[ip].filter(ts => now - ts < RATE_LIMIT_WINDOW);
+        if (rateLimiters[ip].length === 0) {
+            delete rateLimiters[ip];
+        }
+    });
+}
+setInterval(cleanup, CLEANUP_INTERVAL);
+
+/**
  * Generates a cache key for GET requests based on method and URL.
  * @param {http.IncomingMessage} req - Incoming client request
  * @returns {string} Cache key
@@ -286,16 +315,26 @@ function handleRequest(req, res) {
             return;
         }
         // Proxy and cache response
-        const _end = res.end;
-        let chunks = [];
-        res.end = function (body) {
-            chunks.push(body);
-            cache[key] = {
-                ts: Date.now(),
-                body: body,
-                headers: res.getHeaders()
-            };
-            _end.call(res, body);
+        const _end = res.end.bind(res);
+        const _writeHead = res.writeHead.bind(res);
+        let cachedBody;
+        let cachedHeaders;
+
+        res.writeHead = function (...args) {
+            cachedHeaders = res.getHeaders();
+            return _writeHead(...args);
+        };
+
+        res.end = function (body, ...args) {
+            if (body && res.statusCode === 200) {
+                cachedBody = body;
+                cache[key] = {
+                    ts: Date.now(),
+                    body: cachedBody,
+                    headers: cachedHeaders || res.getHeaders()
+                };
+            }
+            return _end(body, ...args);
         };
     }
 
