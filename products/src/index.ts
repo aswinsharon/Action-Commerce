@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import serverless from "serverless-http";
 import dotenv from 'dotenv';
-import productRoutes from './routes/product.route';
+import route from './routes/product.route';
 import { DatabaseConfig } from './common/config/database.config';
 import { errorHandler } from './common/middlewares/errorHandler';
 import { Logger } from './common/loggers/logger';
@@ -16,8 +16,7 @@ app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(errorHandler);
-
-app.use('/products', productRoutes);
+app.use('/products', route);
 
 dataBaseConfig.on("connected", () => {
     logger.info("MongoDB connected successfully!");
@@ -29,7 +28,7 @@ const startServer = async () => {
     try {
         await dataBaseConfig.connect();
         app.listen(PORT, () => {
-            logger.info(`Products Service is running on port ${PORT}`);
+            logger.info(`Products service running on port ${PORT}`);
         });
     } catch (err) {
         logger.error(`Failed to start server: ${err}`);

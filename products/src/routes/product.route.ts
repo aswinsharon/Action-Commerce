@@ -1,69 +1,80 @@
-import express from 'express';
-import { authenticateToken, authorizeRoles } from '../common/middlewares/auth.middleware';
+/**
+ * @fileoverview Express router for handling product-related API endpoints.
+ * Commerce Tools compatible Product API endpoints.
+ * 
+ * Reference: https://docs.commercetools.com/api/projects/products
+ */
 
+import express from "express";
+import { productController } from "../controllers/product.controller";
+import { validateBody } from "../common/middlewares/validateBody";
+import { createProductValidationSchema } from "../common/validations/product.validation";
+import { authenticateToken, authorizeRoles } from "../common/middlewares/auth.middleware";
 const router = express.Router();
 
 /**
- * GET /
- * Get all products (authenticated)
+ * Commerce Tools Product Endpoints
+ * Base path: /{projectKey}/products
  */
-router.get('/', authenticateToken, (req, res) => {
-    res.json({
-        message: 'Products endpoint - Get all products',
-        query: req.query,
-        user: (req as any).user,
-        clientId: (req as any).clientId
-    });
-});
 
 /**
- * GET /:productId
- * Get product by ID (authenticated)
+ * Query Products
+ * GET /{projectKey}/products
  */
-router.get('/:productId', authenticateToken, (req, res) => {
-    res.json({
-        message: `Get product ${req.params.productId}`,
-        productId: req.params.productId,
-        user: (req as any).user,
-        clientId: (req as any).clientId
-    });
-});
+router.get('/', authenticateToken, productController.getAllProducts);
 
 /**
- * POST /
- * Create new product (admin/manager only)
+ * Get Product by Key
+ * GET /{projectKey}/products/key={key}
  */
-router.post('/', authenticateToken, authorizeRoles('admin', 'manager'), (req, res) => {
-    res.json({
-        message: 'Create new product',
-        body: req.body,
-        user: (req as any).user
-    });
-});
+router.get('/key=:key', authenticateToken, productController.getProductByKey);
 
 /**
- * PATCH /:productId
- * Update product (admin/manager only)
+ * Get Product by ID
+ * GET /{projectKey}/products/{id}
  */
-router.patch('/:productId', authenticateToken, authorizeRoles('admin', 'manager'), (req, res) => {
-    res.json({
-        message: `Update product ${req.params.productId}`,
-        productId: req.params.productId,
-        body: req.body,
-        user: (req as any).user
-    });
-});
+router.get('/:id', authenticateToken, productController.getProductById);
 
 /**
- * DELETE /:productId
- * Delete product (admin only)
+ * Create Product
+ * POST /{projectKey}/products
  */
-router.delete('/:productId', authenticateToken, authorizeRoles('admin'), (req, res) => {
-    res.json({
-        message: `Delete product ${req.params.productId}`,
-        productId: req.params.productId,
-        user: (req as any).user
-    });
-});
+router.post('/', authenticateToken, authorizeRoles('admin', 'manager'), validateBody(createProductValidationSchema), productController.createProduct);
+
+/**
+ * Update Product by Key
+ * POST /{projectKey}/products/key={key}
+ */
+router.post('/key=:key', authenticateToken, authorizeRoles('admin', 'manager'), productController.updateProductByKey);
+
+/**
+ * Update Product by ID
+ * POST /{projectKey}/products/{id}
+ */
+router.post('/:id', authenticateToken, authorizeRoles('admin', 'manager'), productController.updateProductById);
+
+/**
+ * Delete Product by Key
+ * DELETE /{projectKey}/products/key={key}?version={version}
+ */
+router.delete('/key=:key', authenticateToken, authorizeRoles('admin'), productController.deleteProductByKey);
+
+/**
+ * Delete Product by ID
+ * DELETE /{projectKey}/products/{id}?version={version}
+ */
+router.delete('/:id', authenticateToken, authorizeRoles('admin'), productController.deleteProductById);
+
+/**
+ * Check if Product exists by ID
+ * HEAD /{projectKey}/products/{id}
+ */
+router.head('/:id', authenticateToken, productController.checkProductExistsById);
+
+/**
+ * Check if Products exist
+ * HEAD /{projectKey}/products
+ */
+router.head('/', authenticateToken, productController.checkProductsExist);
 
 export default router;

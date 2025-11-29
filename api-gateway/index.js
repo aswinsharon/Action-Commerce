@@ -150,8 +150,8 @@ app.get('/api', (req, res) => {
     });
 });
 
-// Catch-all for undefined routes
-app.use('*', (req, res) => {
+// Catch-all for undefined routes (must be last)
+app.use((req, res) => {
     res.status(404).json({
         statusCode: 404,
         message: 'The requested endpoint does not exist',
