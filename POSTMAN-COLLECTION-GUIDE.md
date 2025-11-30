@@ -1,5 +1,12 @@
 # Action Commerce - Postman Collection Guide
 
+## Architecture Overview
+
+All API requests now go through the **API Gateway** at `http://localhost:3000`. The gateway:
+- Validates JWT tokens centrally
+- Forwards authenticated user info to services
+- Routes requests to appropriate microservices
+
 ## Updated Environment Variables
 
 The following environment variables have been added/updated:
@@ -31,31 +38,33 @@ The following environment variables have been added/updated:
 }
 ```
 
-## New Endpoints Added
+## API Endpoints (via Gateway)
 
-### 💳 Payments Service (Port 6005)
+**Important:** All requests go through the API Gateway at `{{base_url}}/api/*`
+
+### 💳 Payments Service
 
 #### Query Payments
 ```
-GET {{payments_url}}/payments?page=1&pageSize=10
+GET {{base_url}}/api/payments?page=1&pageSize=10
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Get Payment by ID
 ```
-GET {{payments_url}}/payments/{{payment_id}}
+GET {{base_url}}/api/payments/{{payment_id}}
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Get Payment by Key
 ```
-GET {{payments_url}}/payments/key={{payment_key}}
+GET {{base_url}}/api/payments/key={{payment_key}}
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Create Payment
 ```
-POST {{payments_url}}/payments
+POST {{base_url}}/api/payments
 Headers: 
   Authorization: Bearer {{admin_token}}
   Content-Type: application/json
@@ -84,7 +93,7 @@ Body:
 
 #### Update Payment - Add Transaction
 ```
-POST {{payments_url}}/payments/{{payment_id}}
+POST {{base_url}}/api/payments/{{payment_id}}
 Headers: 
   Authorization: Bearer {{admin_token}}
   Content-Type: application/json
@@ -109,7 +118,7 @@ Body:
 
 #### Update Payment - Change Amount
 ```
-POST {{payments_url}}/payments/{{payment_id}}
+POST {{base_url}}/api/payments/{{payment_id}}
 Body:
 {
   "version": 2,
@@ -125,39 +134,39 @@ Body:
 
 #### Delete Payment
 ```
-DELETE {{payments_url}}/payments/{{payment_id}}?version=1
+DELETE {{base_url}}/api/payments/{{payment_id}}?version=1
 Headers: Authorization: Bearer {{admin_token}}
 ```
 
-### 🛒 Carts Service (Port 6004)
+### 🛒 Carts Service
 
 #### Query Carts
 ```
-GET {{carts_url}}/carts?page=1&pageSize=10
+GET {{base_url}}/api/carts?page=1&pageSize=10
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Get Cart by ID
 ```
-GET {{carts_url}}/carts/{{cart_id}}
+GET {{base_url}}/api/carts/{{cart_id}}
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Get Cart by Key
 ```
-GET {{carts_url}}/carts/key={{cart_key}}
+GET {{base_url}}/api/carts/key={{cart_key}}
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Get Cart by Customer ID
 ```
-GET {{carts_url}}/carts/customer-id={{customer_id}}
+GET {{base_url}}/api/carts/customer-id={{customer_id}}
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Create Cart
 ```
-POST {{carts_url}}/carts
+POST {{base_url}}/api/carts
 Headers: 
   Authorization: Bearer {{auth_token}}
   Content-Type: application/json
@@ -174,7 +183,7 @@ Body:
 
 #### Update Cart - Add Line Item
 ```
-POST {{carts_url}}/carts/{{cart_id}}
+POST {{base_url}}/api/carts/{{cart_id}}
 Body:
 {
   "version": 1,
@@ -189,7 +198,7 @@ Body:
 
 #### Update Cart - Change Quantity
 ```
-POST {{carts_url}}/carts/{{cart_id}}
+POST {{base_url}}/api/carts/{{cart_id}}
 Body:
 {
   "version": 2,
@@ -203,7 +212,7 @@ Body:
 
 #### Update Cart - Set Shipping Address
 ```
-POST {{carts_url}}/carts/{{cart_id}}
+POST {{base_url}}/api/carts/{{cart_id}}
 Body:
 {
   "version": 3,
@@ -222,7 +231,7 @@ Body:
 
 #### Update Cart - Set Cart State
 ```
-POST {{carts_url}}/carts/{{cart_id}}
+POST {{base_url}}/api/carts/{{cart_id}}
 Body:
 {
   "version": 4,
@@ -235,33 +244,33 @@ Body:
 
 #### Delete Cart
 ```
-DELETE {{carts_url}}/carts/{{cart_id}}?version=1
+DELETE {{base_url}}/api/carts/{{cart_id}}?version=1
 Headers: Authorization: Bearer {{admin_token}}
 ```
 
-### 🛍️ Products Service (Port 6002)
+### 🛍️ Products Service
 
 #### Query Products
 ```
-GET {{products_url}}/products?page=1&pageSize=10
+GET {{base_url}}/api/products?page=1&pageSize=10
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Get Product by ID
 ```
-GET {{products_url}}/products/{{product_id}}
+GET {{base_url}}/api/products/{{product_id}}
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Get Product by Key
 ```
-GET {{products_url}}/products/key={{product_key}}
+GET {{base_url}}/api/products/key={{product_key}}
 Headers: Authorization: Bearer {{auth_token}}
 ```
 
 #### Create Product
 ```
-POST {{products_url}}/products
+POST {{base_url}}/api/products
 Headers: 
   Authorization: Bearer {{admin_token}}
   Content-Type: application/json
@@ -308,7 +317,7 @@ Body:
 
 #### Update Product - Change Name (Staged)
 ```
-POST {{products_url}}/products/{{product_id}}
+POST {{base_url}}/api/products/{{product_id}}
 Body:
 {
   "version": 1,
@@ -324,7 +333,7 @@ Body:
 
 #### Update Product - Add Variant
 ```
-POST {{products_url}}/products/{{product_id}}
+POST {{base_url}}/api/products/{{product_id}}
 Body:
 {
   "version": 2,
@@ -344,7 +353,7 @@ Body:
 
 #### Update Product - Add to Category
 ```
-POST {{products_url}}/products/{{product_id}}
+POST {{base_url}}/api/products/{{product_id}}
 Body:
 {
   "version": 3,
@@ -361,7 +370,7 @@ Body:
 
 #### Update Product - Publish
 ```
-POST {{products_url}}/products/{{product_id}}
+POST {{base_url}}/api/products/{{product_id}}
 Body:
 {
   "version": 4,
@@ -373,7 +382,36 @@ Body:
 
 #### Delete Product
 ```
-DELETE {{products_url}}/products/{{product_id}}?version=5
+DELETE {{base_url}}/api/products/{{product_id}}?version=5
+Headers: Authorization: Bearer {{admin_token}}
+```
+
+### 📂 Categories Service
+
+#### Query Categories
+```
+GET {{base_url}}/api/categories?page=1&pageSize=10
+Headers: Authorization: Bearer {{auth_token}}
+```
+
+#### Get Category by ID
+```
+GET {{base_url}}/api/categories/{{category_id}}
+Headers: Authorization: Bearer {{auth_token}}
+```
+
+#### Create Category
+```
+POST {{base_url}}/api/categories
+Headers: 
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+  x-client-id: {{client_id}}
+```
+
+#### Delete Category
+```
+DELETE {{base_url}}/api/categories/{{category_id}}
 Headers: Authorization: Bearer {{admin_token}}
 ```
 
@@ -381,59 +419,67 @@ Headers: Authorization: Bearer {{admin_token}}
 
 ### 1. Authentication
 ```bash
-# Register and login as admin
-POST {{user_management_url}}/auth/register
-POST {{user_management_url}}/auth/login
-# Save token to {{admin_token}}
+# Register and login as admin (via API Gateway)
+POST {{base_url}}/api/auth/register
+POST {{base_url}}/api/auth/login
+# Token is automatically saved to {{auth_token}} and {{admin_token}}
 ```
 
 ### 2. Create Category
 ```bash
-POST {{categories_url}}/categories
+POST {{base_url}}/api/categories
 # Save category_id
 ```
 
 ### 3. Create Product
 ```bash
-POST {{products_url}}/products
+POST {{base_url}}/api/products
 # Save product_id
 ```
 
 ### 4. Create Cart
 ```bash
-POST {{carts_url}}/carts
+POST {{base_url}}/api/carts
 # Save cart_id
 ```
 
 ### 5. Add Product to Cart
 ```bash
-POST {{carts_url}}/carts/{{cart_id}}
+POST {{base_url}}/api/carts/{{cart_id}}
 # Action: addLineItem
 ```
 
 ### 6. Create Payment
 ```bash
-POST {{payments_url}}/payments
+POST {{base_url}}/api/payments
 # Save payment_id
 ```
 
 ### 7. Add Authorization Transaction
 ```bash
-POST {{payments_url}}/payments/{{payment_id}}
+POST {{base_url}}/api/payments/{{payment_id}}
 # Action: addTransaction (type: Authorization)
 ```
 
 ### 8. Charge Payment
 ```bash
-POST {{payments_url}}/payments/{{payment_id}}
+POST {{base_url}}/api/payments/{{payment_id}}
 # Action: addTransaction (type: Charge)
 ```
 
 ### 9. Mark Cart as Ordered
 ```bash
-POST {{carts_url}}/carts/{{cart_id}}
+POST {{base_url}}/api/carts/{{cart_id}}
 # Action: setCartState (state: Ordered)
 ```
+
+## Authentication Flow
+
+1. **Login/Register** → Returns JWT token
+2. **Token Auto-Saved** → Stored in `{{auth_token}}` environment variable
+3. **All Requests** → Include `Authorization: Bearer {{auth_token}}` header
+4. **API Gateway** → Validates token once, forwards user info to services
+5. **Services** → Trust gateway headers, no token validation needed
 
 ## Testing Tips
 
@@ -442,12 +488,20 @@ POST {{carts_url}}/carts/{{cart_id}}
 3. **Check versions**: Update actions require correct version numbers
 4. **Test with different roles**: Use admin_token, manager_token, customer_token
 5. **Test error cases**: Try invalid tokens, missing fields, wrong versions
+6. **All requests go through gateway**: Use `{{base_url}}/api/*` endpoints
 
 ## Import Instructions
 
-1. Import `Action-Commerce-Environment.postman_environment.json` into Postman
-2. Create requests manually using the examples above
-3. Or use Postman's "Import" > "Raw text" and paste request examples
-4. Set the environment to "Action Commerce - Local Development"
+1. Import `Action-Commerce-API-Collection.postman_collection.json` into Postman
+2. Import `Action-Commerce-Environment.postman_environment.json` into Postman
+3. Set the environment to "Action Commerce - Local Development"
+4. Ensure API Gateway is running on port 3000
 5. Run authentication requests first to get tokens
-6. Use saved environment variables in subsequent requests
+6. All subsequent requests will automatically use the saved token
+
+## Architecture Notes
+
+- **Centralized Authentication**: API Gateway validates JWT tokens
+- **Single Point of Entry**: All requests go through `http://localhost:3000/api/*`
+- **Service Independence**: Microservices trust gateway headers
+- **Automatic Token Handling**: Collection automatically includes Bearer token in all requests

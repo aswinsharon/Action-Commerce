@@ -41,7 +41,19 @@ interface SetCustomerAction {
     customer?: Reference;
 }
 
-type PaymentAction = AddTransactionAction | ChangeAmountPlannedAction | SetCustomerAction;
+interface ChangeTransactionStateAction {
+    action: "changeTransactionState";
+    transactionId: string;
+    state: string;
+}
+
+interface SetTransactionInteractionIdAction {
+    action: "setTransactionInteractionId";
+    transactionId: string;
+    interactionId: string;
+}
+
+type PaymentAction = AddTransactionAction | ChangeAmountPlannedAction | SetCustomerAction | ChangeTransactionStateAction | SetTransactionInteractionIdAction;
 
 interface UpdateInfo {
     version: number;
@@ -218,6 +230,52 @@ class PaymentService {
                     }
                 );
                 if (customerResult.modifiedCount === 1) {
+                    const updated = await Payment.findOne(query);
+                    if (updated) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: PaymentService.formatPayment(updated) };
+                    }
+                }
+                break;
+
+            case "changeTransactionState":
+                const stateResult = await Payment.updateOne(
+                    {
+                        ...query,
+                        version,
+                        "transactions.id": action.transactionId
+                    },
+                    {
+                        $set: {
+                            "transactions.$.state": action.state,
+                            ...updateData
+                        },
+                        $inc: { version: 1 }
+                    }
+                );
+                if (stateResult.modifiedCount === 1) {
+                    const updated = await Payment.findOne(query);
+                    if (updated) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: PaymentService.formatPayment(updated) };
+                    }
+                }
+                break;
+
+            case "setTransactionInteractionId":
+                const interactionResult = await Payment.updateOne(
+                    {
+                        ...query,
+                        version,
+                        "transactions.id": action.transactionId
+                    },
+                    {
+                        $set: {
+                            "transactions.$.interactionId": action.interactionId,
+                            ...updateData
+                        },
+                        $inc: { version: 1 }
+                    }
+                );
+                if (interactionResult.modifiedCount === 1) {
                     const updated = await Payment.findOne(query);
                     if (updated) {
                         return { status: HTTP_STATUS.OK, code: "Success", data: PaymentService.formatPayment(updated) };

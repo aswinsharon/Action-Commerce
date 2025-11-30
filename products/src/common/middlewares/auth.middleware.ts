@@ -2,22 +2,32 @@ import { Request, Response, NextFunction } from 'express';
 import HTTP_STATUS from '../constants/httpStatus';
 import { ErrorResponse } from '../dtos/error.response';
 
+/**
+ * Authentication middleware that trusts the API Gateway
+ * The gateway validates JWT tokens and forwards user info via headers
+ */
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const userId = req.headers['x-user-id'] as string;
+    const userEmail = req.headers['x-user-email'] as string;
+    const userRole = req.headers['x-user-role'] as string;
 
-    if (!token) {
+    if (!userId || !userEmail || !userRole) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json(
             new ErrorResponse(
                 HTTP_STATUS.UNAUTHORIZED,
-                'Access token is missing or invalid',
+                'User not authenticated',
                 'Unauthorized'
             )
         );
     }
 
-    // In a real implementation, verify JWT token here
-    // For now, we'll pass through assuming token validation happens at API Gateway
+    // Populate req.user from gateway headers
+    req.user = {
+        id: userId,
+        email: userEmail,
+        role: userRole
+    };
+
     next();
 };
 

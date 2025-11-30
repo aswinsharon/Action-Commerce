@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import axios from 'axios';
 import { ErrorResponse } from '../dtos/error.response';
 import { Logger } from '../loggers/logger';
 
@@ -14,11 +13,19 @@ export interface AuthenticatedRequest extends Request {
     clientId?: string;
 }
 
-export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+/**
+ * Authentication middleware that trusts the API Gateway
+ * The gateway validates JWT tokens and forwards user info via headers
+ */
+export const authenticateToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     logger.info(`Auth middleware called for ${req.method} ${req.path}`);
 
-    // Check for clientId header (like commercetools)
+    const userId = req.headers['x-user-id'] as string;
+    const userEmail = req.headers['x-user-email'] as string;
+    const userRole = req.headers['x-user-role'] as string;
     const clientId = req.headers['x-client-id'] as string;
+
+    logger.info(`User headers - ID: ${userId ? 'Present' : 'Missing'}, Email: ${userEmail ? 'Present' : 'Missing'}, Role: ${userRole ? 'Present' : 'Missing'}`);
     logger.info(`Client ID header: ${clientId ? 'Present' : 'Missing'}`);
 
     if (!clientId) {
@@ -28,66 +35,23 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
         );
     }
 
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    logger.info(`Authorization header: ${authHeader ? 'Present' : 'Missing'}`);
-    logger.info(`Token extracted: ${token ? 'Present' : 'Missing'}`);
-
-    if (!token) {
-        logger.warn('No token provided');
+    if (!userId || !userEmail || !userRole) {
+        logger.warn('User not authenticated - missing user headers from gateway');
         return res.status(401).json(
-            new ErrorResponse(401, 'Access token is required', 'Unauthorized')
+            new ErrorResponse(401, 'User not authenticated', 'Unauthorized')
         );
     }
 
-    try {
-        const userManagementUrl = process.env.USER_MANAGEMENT_URL || 'http://localhost:6001';
-        logger.info(`Verifying token with user management service: ${userManagementUrl}`);
+    // Populate req.user from gateway headers
+    req.user = {
+        id: userId,
+        email: userEmail,
+        role: userRole
+    };
+    req.clientId = clientId;
 
-        const response = await axios.post(`${userManagementUrl}/auth/verify`, {}, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'x-client-id': clientId
-            }
-        });
-
-        req.user = response.data.data;
-        req.clientId = clientId;
-        logger.info(`Token verified successfully for user: ${req.user?.email} with clientId: ${clientId}`);
-        return next();
-    } catch (error: any) {
-        logger.error(`Token verification failed: ${error.message}`);
-        logger.error(`Full error details: I` + error.response?.data || error);
-
-        // Check if it's a network/connection error
-        if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-            logger.error('Cannot connect to user management service');
-            return res.status(503).json({
-                statusCode: 503,
-                message: 'User management service unavailable',
-                errors: [{
-                    code: 'ServiceUnavailable',
-                    message: 'Cannot connect to authentication service'
-                }]
-            });
-        }
-
-        // Return the actual error from user management service if available
-        if (error.response && error.response.data) {
-            logger.error(`Received error from user management service: ` + error.response.data);
-            return res.status(error.response.status || 403).json(error.response.data);
-        }
-
-        return res.status(403).json({
-            statusCode: 403,
-            message: 'Invalid or expired token',
-            errors: [{
-                code: 'Forbidden',
-                message: 'Invalid or expired token'
-            }]
-        });
-    }
+    logger.info(`User authenticated: ${userEmail} (${userRole}) with clientId: ${clientId}`);
+    return next();
 };
 
 export const authorizeRoles = (...roles: string[]) => {
