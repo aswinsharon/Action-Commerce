@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
@@ -20,6 +21,57 @@ app.use((req, res, next) => {
     });
     next();
 });
+
+// JWT Authentication Middleware
+const authenticateToken = (req, res, next) => {
+    // Skip auth for public endpoints
+    const publicEndpoints = ['/health', '/health/services', '/api', '/api/auth/login', '/api/auth/register'];
+    if (publicEndpoints.includes(req.path) || req.path.startsWith('/api/auth/')) {
+        return next();
+    }
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    console.log(`[AUTH] Authorization header: ${authHeader ? 'Present' : 'Missing'}`);
+    console.log(`[AUTH] Token extracted: ${token ? token.substring(0, 20) + '...' : 'None'}`);
+    console.log(`[AUTH] JWT_SECRET configured: ${process.env.JWT_SECRET ? 'Yes' : 'No'}`);
+
+    if (!token) {
+        return res.status(401).json({
+            statusCode: 401,
+            message: 'Access token is required',
+            errors: [{
+                code: 'Unauthorized',
+                message: 'No token provided'
+            }]
+        });
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Add user info to headers for downstream services
+        req.headers['x-user-id'] = decoded.id;
+        req.headers['x-user-email'] = decoded.email;
+        req.headers['x-user-role'] = decoded.role;
+        console.log(`[AUTH] Token verified for user: ${decoded.email} (${decoded.role})`);
+        next();
+    } catch (error) {
+        console.error(`[AUTH] Token verification failed:`, error.message);
+        console.error(`[AUTH] Token format check - parts: ${token.split('.').length} (should be 3)`);
+        return res.status(403).json({
+            statusCode: 403,
+            message: 'Invalid or expired token',
+            errors: [{
+                code: 'Forbidden',
+                message: error.message
+            }]
+        });
+    }
+};
+
+// Apply authentication middleware globally
+app.use(authenticateToken);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -75,6 +127,10 @@ const services = {
     carts: {
         target: process.env.CART_SERVICE_URL || 'http://localhost:6004',
         pathRewrite: { '^/api/carts': '/carts' }
+    },
+    payments: {
+        target: process.env.PAYMENT_SERVICE_URL || 'http://localhost:6005',
+        pathRewrite: { '^/api/payments': '/payments' }
     }
 };
 
@@ -107,6 +163,17 @@ const createProxyOptions = (serviceName, config) => ({
         }
         if (req.headers['authorization']) {
             proxyReq.setHeader('authorization', req.headers['authorization']);
+        }
+
+        // Forward user info headers (set by auth middleware)
+        if (req.headers['x-user-id']) {
+            proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
+        }
+        if (req.headers['x-user-email']) {
+            proxyReq.setHeader('x-user-email', req.headers['x-user-email']);
+        }
+        if (req.headers['x-user-role']) {
+            proxyReq.setHeader('x-user-role', req.headers['x-user-role']);
         }
 
         // Handle body for POST/PUT/PATCH
@@ -150,7 +217,6 @@ app.get('/api', (req, res) => {
     });
 });
 
-// Catch-all for undefined routes (must be last)
 app.use((req, res) => {
     res.status(404).json({
         statusCode: 404,
