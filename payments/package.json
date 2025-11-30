@@ -1,0 +1,48 @@
+{
+    "name": "payments",
+    "version": "1.0.0",
+    "description": "Payment microservice for Action Commerce",
+    "main": "index.js",
+    "scripts": {
+        "clean": "echo 'Cleaning build...' && rimraf build:*",
+        "tsc": "tsc",
+        "server": "npm run build && node build/main/index.js",
+        "local": "npm run build && dotenv -e .env.local -- node build/main/index.js",
+        "dev": "npm run build && dotenv -e .env.local -- node build/main/index.js",
+        "start": "npm run build && dotenv -e .env.local -- node build/main/index.js",
+        "deploy": "npm run build && serverless deploy",
+        "build": "npm-run-all clean && run-p build:* && copyfiles -u 1 build/main",
+        "build:main": "tsc -p tsconfig.json",
+        "test": "jest"
+    },
+    "keywords": [
+        "payments",
+        "commerce",
+        "microservice"
+    ],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "chalk": "^5.4.1",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.1",
+        "dotenv-cli": "^10.0.0",
+        "express": "^5.1.0",
+        "joi": "^17.13.3",
+        "mongoose": "^8.16.4",
+        "nodemon": "^3.1.10",
+        "serverless": "^3.40.0",
+        "serverless-http": "^3.2.0",
+        "uuid": "^11.1.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.3",
+        "@types/mongoose": "^5.11.97",
+        "@types/node": "^24.1.0",
+        "copyfiles": "^2.4.1",
+        "npm-run-all": "^4.1.5",
+        "rimraf": "^6.0.1",
+        "typescript": "^5.8.3"
+    }
+}

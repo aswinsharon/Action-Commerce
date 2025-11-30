@@ -72,7 +72,6 @@ export class DatabaseConfig extends EventEmitter {
             MONGO_DB = 'ms_action_products_db',
             MONGO_AUTH_SOURCE = 'admin'
         } = process.env;
-
         const baseOptions: mongoose.ConnectOptions = {
             autoIndex: false,
             maxPoolSize: 10,
@@ -81,7 +80,6 @@ export class DatabaseConfig extends EventEmitter {
             monitorCommands: true,
             dbName: MONGO_DB,
         };
-
         if (MONGO_USER && MONGO_PASSWORD) {
             return {
                 ...baseOptions,

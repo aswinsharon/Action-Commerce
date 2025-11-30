@@ -182,7 +182,10 @@ detect_terminal() {
 
 TERMINAL_TYPE=$(detect_terminal)
 
-# Function to start a service in a new terminal
+# Global variable to track if first service (for iTerm/Terminal)
+FIRST_SERVICE=true
+
+# Function to start a service in a new tab
 start_service() {
     local service_name=$1
     local service_dir=$2
@@ -192,22 +195,55 @@ start_service() {
     
     case $TERMINAL_TYPE in
         "iterm")
-            osascript <<EOF
+            if [ "$FIRST_SERVICE" = true ]; then
+                # First service: create new window
+                osascript <<EOF
 tell application "iTerm"
     create window with default profile
     tell current session of current window
+        set name to "$service_name"
         write text "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start"
     end tell
 end tell
 EOF
+                FIRST_SERVICE=false
+            else
+                # Subsequent services: create new tab in current window
+                osascript <<EOF
+tell application "iTerm"
+    tell current window
+        create tab with default profile
+        tell current session
+            set name to "$service_name"
+            write text "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start"
+        end tell
+    end tell
+end tell
+EOF
+            fi
             ;;
         "macos")
-            osascript <<EOF
+            if [ "$FIRST_SERVICE" = true ]; then
+                # First service: create new window
+                osascript <<EOF
 tell application "Terminal"
     do script "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start"
+    set custom title of front window to "$service_name"
     activate
 end tell
 EOF
+                FIRST_SERVICE=false
+            else
+                # Subsequent services: create new tab
+                osascript <<EOF
+tell application "Terminal"
+    tell front window
+        do script "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start" in (make new tab)
+        set custom title of current tab to "$service_name"
+    end tell
+end tell
+EOF
+            fi
             ;;
         "gnome-terminal")
             gnome-terminal --tab --title="$service_name" -- bash -c "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start; exec bash"
