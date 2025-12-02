@@ -1,8 +1,8 @@
 /**
  * @fileoverview Express router for handling payment-related API endpoints.
- * Commerce Tools compatible Payment API endpoints.
  * 
- * Reference: https://docs.commercetools.com/api/projects/payments
+ * 
+ * 
  */
 
 import express from "express";

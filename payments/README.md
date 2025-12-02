@@ -60,8 +60,6 @@ npm start
 
 ## API Endpoints
 
-**Commerce Tools Compatible API** - See [COMMERCETOOLS-API-COMPATIBILITY.md](./COMMERCETOOLS-API-COMPATIBILITY.md) for full details.
-
 ### Payments
 - `GET /payments` - Query all payments (paginated)
 - `GET /payments/:id` - Get payment by ID

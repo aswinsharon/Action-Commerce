@@ -48,7 +48,7 @@ export class DatabaseConfig extends EventEmitter {
             this.connectWithRetry();
         });
 
-        this.dbConnection.on('error', (err) => {
+        this.dbConnection.on('error', (err: any) => {
             logger.error(`MongoDB error: ${err}`);
         });
     }

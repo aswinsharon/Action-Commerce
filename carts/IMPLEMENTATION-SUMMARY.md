@@ -115,7 +115,6 @@ carts/
 ├── .env.local
 ├── .gitignore
 ├── README.md
-├── COMMERCETOOLS-API-COMPATIBILITY.md
 ├── API-QUICK-REFERENCE.md
 └── IMPLEMENTATION-SUMMARY.md
 ```

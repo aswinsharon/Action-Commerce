@@ -107,7 +107,6 @@ payments/
 ├── .gitignore
 ├── README.md
 ├── SETUP.md
-├── COMMERCETOOLS-API-COMPATIBILITY.md
 ├── COMMERCE-TOOLS-ENDPOINTS.md
 └── IMPLEMENTATION-SUMMARY.md
 ```

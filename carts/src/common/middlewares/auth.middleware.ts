@@ -21,14 +21,13 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
         );
     }
 
-    // Populate req.user from gateway headers
     req.user = {
         id: userId,
         email: userEmail,
         role: userRole
     };
 
-    next();
+    return next();
 };
 
 export const authorizeRoles = (...allowedRoles: string[]) => {
@@ -53,6 +52,6 @@ export const authorizeRoles = (...allowedRoles: string[]) => {
             );
         }
 
-        next();
+        return next();
     };
 };

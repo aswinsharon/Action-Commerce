@@ -33,10 +33,6 @@ const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    console.log(`[AUTH] Authorization header: ${authHeader ? 'Present' : 'Missing'}`);
-    console.log(`[AUTH] Token extracted: ${token ? token.substring(0, 20) + '...' : 'None'}`);
-    console.log(`[AUTH] JWT_SECRET configured: ${process.env.JWT_SECRET ? 'Yes' : 'No'}`);
-
     if (!token) {
         return res.status(401).json({
             statusCode: 401,
@@ -244,10 +240,10 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
-    console.log(`\n🚀 API Gateway running on port ${PORT}`);
-    console.log(`📍 Gateway URL: http://localhost:${PORT}`);
-    console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-    console.log('\n📦 Available services:');
+    console.log(`\n API Gateway running on port ${PORT}`);
+    console.log(`Gateway URL: http://localhost:${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+    console.log('\n Available services:');
     Object.entries(services).forEach(([name, config]) => {
         console.log(`   - ${name.padEnd(12)} -> ${config.target}`);
     });
@@ -256,9 +252,9 @@ const server = app.listen(PORT, () => {
 
 // Graceful shutdown
 const gracefulShutdown = () => {
-    console.log('\n🛑 Shutting down API Gateway...');
+    console.log('\nShutting down API Gateway...');
     server.close(() => {
-        console.log('✅ API Gateway closed');
+        console.log('API Gateway closed');
         process.exit(0);
     });
 };

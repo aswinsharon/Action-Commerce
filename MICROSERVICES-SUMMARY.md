@@ -166,9 +166,8 @@ All services use JWT Bearer tokens with role-based access control:
 ### Per Service Documentation
 Each service includes:
 1. **README.md** - Service overview and usage
-2. **COMMERCETOOLS-API-COMPATIBILITY.md** - Full compatibility details
-3. **API-QUICK-REFERENCE.md** - Quick reference guide
-4. **IMPLEMENTATION-SUMMARY.md** - Implementation overview
+2. **API-QUICK-REFERENCE.md** - Quick reference guide
+3. **IMPLEMENTATION-SUMMARY.md** - Implementation overview
 
 ### Global Documentation
 1. **POSTMAN-COLLECTION-GUIDE.md** - Complete API testing guide
