@@ -9,7 +9,6 @@ const logger = new Logger();
  * @param schema Joi object schema
  */
 export function validateBody(schema: ObjectSchema) {
-    // console.log("Setting up body validation middleware with schema:", schema.describe());
     return (req: Request, res: Response, next: NextFunction): void => {
         const { error, value } = schema.validate(req.body, { abortEarly: false });
         console.log("Validating request body:", error);

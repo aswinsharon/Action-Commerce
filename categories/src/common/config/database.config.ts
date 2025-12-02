@@ -23,7 +23,6 @@ export class DatabaseConfig extends EventEmitter {
                 await mongoose.connect(this.mongoConnectionUrl, this.getConnectionOptions());
                 this.dbConnection = mongoose.connection;
 
-                // Setup listeners fresh every time
                 this.setupEventListeners();
                 this.setupDisconnectListeners();
 
@@ -40,9 +39,6 @@ export class DatabaseConfig extends EventEmitter {
         process.exit(1);
     }
 
-    /**
-     * Listen for runtime disconnects and handle reconnection
-     */
     private setupDisconnectListeners() {
         if (!this.dbConnection) return;
 

@@ -2,9 +2,6 @@
 
 This document outlines how the carts microservice endpoints match with Commerce Tools Cart API.
 
-## API Reference
-Based on: https://docs.commercetools.com/api/projects/carts
-
 ## Endpoint Mapping
 
 ### ✅ Query Carts

@@ -2,7 +2,7 @@
  * @fileoverview Express router for handling product-related API endpoints.
  * Commerce Tools compatible Product API endpoints.
  * 
- * Reference: https://docs.commercetools.com/api/projects/products
+ * 
  */
 
 import express from "express";

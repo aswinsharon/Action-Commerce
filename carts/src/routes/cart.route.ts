@@ -1,8 +1,8 @@
 /**
  * @fileoverview Express router for handling cart-related API endpoints.
- * Commerce Tools compatible Cart API endpoints.
+ *
  * 
- * Reference: https://docs.commercetools.com/api/projects/carts
+ * 
  */
 
 import express from "express";
@@ -11,11 +11,6 @@ import { validateBody } from "../common/middlewares/validateBody";
 import { createCartValidationSchema } from "../common/validations/cart.validation";
 import { authenticateToken, authorizeRoles } from "../common/middlewares/auth.middleware";
 const router = express.Router();
-
-/**
- * Commerce Tools Cart Endpoints
- * Base path: /{projectKey}/carts
- */
 
 /**
  * Query Carts

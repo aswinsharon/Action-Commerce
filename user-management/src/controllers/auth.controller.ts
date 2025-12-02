@@ -44,7 +44,6 @@ class AuthController {
 
     async verifyToken(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            // Check for clientId header (like commercetools)
             const clientId = req.headers['x-client-id'] as string;
             if (!clientId) {
                 return res.status(HTTP_STATUS.BAD_REQUEST).json(

@@ -5,12 +5,10 @@ const supportedLocales: string[] = [
     "tr", "tr-tr", "zh", "zh-cn", "zh-tw", "ja", "ja-jp", "ko", "ko-kr", "ar", "ar-sa"
 ];
 
-// Helper: check if a locale is supported
 function isValidLocale(locale: string) {
     return supportedLocales.includes(locale.toLowerCase());
 }
 
-// Helper: get the default locale
 function getDefaultLocale() {
     return "en";
 }
