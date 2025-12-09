@@ -274,6 +274,23 @@ productSchema.index({ 'masterData.current.slug': 1 });
 productSchema.index({ 'masterData.current.categories.id': 1 });
 productSchema.index({ 'masterData.published': 1 });
 
+// Indexes for SKU lookups (critical for inventory and variant queries)
+productSchema.index({ 'masterData.current.masterVariant.sku': 1 });
+productSchema.index({ 'masterData.current.variants.sku': 1 });
+productSchema.index({ 'masterData.staged.masterVariant.sku': 1 });
+productSchema.index({ 'masterData.staged.variants.sku': 1 });
+
+// Indexes for price range queries
+productSchema.index({ 'masterData.current.masterVariant.prices.value.centAmount': 1 });
+productSchema.index({ 'masterData.current.variants.prices.value.centAmount': 1 });
+
+// Compound index for published products with categories (common query pattern)
+productSchema.index({ 'masterData.published': 1, 'masterData.current.categories.id': 1 });
+
+// Index for attribute-based searches
+productSchema.index({ 'masterData.current.masterVariant.attributes.name': 1, 'masterData.current.masterVariant.attributes.value': 1 });
+productSchema.index({ 'masterData.current.variants.attributes.name': 1, 'masterData.current.variants.attributes.value': 1 });
+
 const Product = mongoose.model('Product', productSchema);
 
 export default Product;

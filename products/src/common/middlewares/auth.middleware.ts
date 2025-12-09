@@ -2,10 +2,6 @@ import { Request, Response, NextFunction } from 'express';
 import HTTP_STATUS from '../constants/httpStatus';
 import { ErrorResponse } from '../dtos/error.response';
 
-/**
- * Authentication middleware that trusts the API Gateway
- * The gateway validates JWT tokens and forwards user info via headers
- */
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     const userId = req.headers['x-user-id'] as string;
     const userEmail = req.headers['x-user-email'] as string;
@@ -21,14 +17,13 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
         );
     }
 
-    // Populate req.user from gateway headers
     req.user = {
         id: userId,
         email: userEmail,
         role: userRole
     };
 
-    next();
+    return next();
 };
 
 export const authorizeRoles = (...allowedRoles: string[]) => {
@@ -53,6 +48,6 @@ export const authorizeRoles = (...allowedRoles: string[]) => {
             );
         }
 
-        next();
+        return next();
     };
 };

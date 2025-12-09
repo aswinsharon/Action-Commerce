@@ -77,4 +77,32 @@ router.head('/:id', authenticateToken, productController.checkProductExistsById)
  */
 router.head('/', authenticateToken, productController.checkProductsExist);
 
+/**
+ * OPTIMIZED ENDPOINTS
+ */
+
+/**
+ * Get Product by SKU (Optimized with index)
+ * GET /{projectKey}/products/sku/{sku}
+ */
+router.get('/sku/:sku', authenticateToken, productController.getProductBySku);
+
+/**
+ * Get Products by Price Range (Optimized with aggregation)
+ * GET /{projectKey}/products/price-range?minPrice={min}&maxPrice={max}&currencyCode={code}
+ */
+router.get('/price-range', authenticateToken, productController.getProductsByPriceRange);
+
+/**
+ * Get Products by Category (Optimized with projection)
+ * GET /{projectKey}/products/category/{categoryId}
+ */
+router.get('/category/:categoryId', authenticateToken, productController.getProductsByCategory);
+
+/**
+ * Update Variant Stock (Atomic operation)
+ * PATCH /{projectKey}/products/{id}/variants/{sku}/stock
+ */
+router.patch('/:id/variants/:sku/stock', authenticateToken, authorizeRoles('admin', 'manager'), productController.updateVariantStock);
+
 export default router;

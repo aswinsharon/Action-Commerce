@@ -1,6 +1,6 @@
 import { buildCreateBodyObject } from '../common/utils/utilities';
 import Product from '../models/productSchema';
-import { ProductBody, ProductData, ProductVariant, Price } from '../common/dtos/product';
+import { ProductBody, ProductVariant, Price } from '../common/dtos/product';
 import HTTP_STATUS from '../common/constants/httpStatus';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -143,11 +143,36 @@ class ProductService {
     static async getAllProducts(page = 0, pageSize = 10, projection: any = null): Promise<ServiceResponse<any>> {
         const limit = pageSize > 0 ? pageSize : 10;
         const offset = page > 0 ? (page - 1) * limit : 0;
-        const products = await Product.find({}, projection || undefined)
+
+        // Use lean projection to reduce memory overhead
+        const defaultProjection = projection || {
+            _id: 1,
+            version: 1,
+            key: 1,
+            createdAt: 1,
+            lastModifiedAt: 1,
+            'masterData.published': 1,
+            'masterData.current.name': 1,
+            'masterData.current.slug': 1,
+            'masterData.current.description': 1,
+            'masterData.current.categories': 1,
+            'masterData.current.masterVariant.id': 1,
+            'masterData.current.masterVariant.sku': 1,
+            'masterData.current.masterVariant.prices': 1,
+            'masterData.current.masterVariant.images': 1,
+            'masterData.current.masterVariant.availability': 1,
+            // Exclude heavy nested data by default
+            'productType': 1,
+            'reviewRatingStatistics': 1
+        };
+
+        const products = await Product.find({}, defaultProjection)
             .sort({ createdAt: -1 })
             .skip(offset)
             .limit(limit)
+            .lean() // Use lean() for better performance when not modifying documents
             .exec();
+
         const results = products.map(ProductService.formatProduct);
         const totalRes = await ProductService.countProducts();
         const totalPages = totalRes.data && limit ? Math.ceil(totalRes.data / limit) : 0;
@@ -190,7 +215,7 @@ class ProductService {
             }
         }
 
-        const productData: ProductData = {
+        const productData: any = {
             name: data.name,
             slug: data.slug,
             description: data.description,
@@ -262,134 +287,193 @@ class ProductService {
             return { status: HTTP_STATUS.BAD_REQUEST, code: "InvalidAction", message: "No actions provided", data: null };
         }
 
-        const product = await Product.findOne({ ...query, version });
-        if (!product) {
-            const existing = await Product.findOne(query);
-            if (existing) {
-                return {
-                    status: HTTP_STATUS.CONFLICT,
-                    code: "ConcurrentModification",
-                    conflictedVersion: existing.version,
-                    data: null
-                };
+        // Use optimistic locking with retry mechanism for concurrency
+        const maxRetries = 3;
+        let retryCount = 0;
+
+        while (retryCount < maxRetries) {
+            const product = await Product.findOne({ ...query, version: version + retryCount });
+            if (!product) {
+                const existing = await Product.findOne(query);
+                if (existing) {
+                    return {
+                        status: HTTP_STATUS.CONFLICT,
+                        code: "ConcurrentModification",
+                        conflictedVersion: existing.version,
+                        currentVersion: version,
+                        data: null
+                    };
+                }
+                return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Product not found", data: null };
             }
-            return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Product not found", data: null };
-        }
 
-        for (const action of actions) {
-            const staged = (action as any).staged !== false;
-            const target = staged ? product.masterData.staged || product.masterData.current : product.masterData.current;
+            if (!product.masterData) {
+                return { status: HTTP_STATUS.INTERNAL_SERVER_ERROR, code: "CorruptedData", message: "Product missing masterData", data: null };
+            }
 
-            switch (action.action) {
-                case "changeName":
-                    target.name = action.name;
-                    product.masterData.hasStagedChanges = staged;
-                    break;
+            for (const action of actions) {
+                const staged = (action as any).staged !== false;
+                const target = staged ? product.masterData.staged || product.masterData.current : product.masterData.current;
 
-                case "changeSlug":
-                    target.slug = action.slug;
-                    product.masterData.hasStagedChanges = staged;
-                    break;
+                if (!target) {
+                    continue;
+                }
 
-                case "setDescription":
-                    target.description = action.description;
-                    product.masterData.hasStagedChanges = staged;
-                    break;
-
-                case "addToCategory":
-                    if (!target.categories) target.categories = [];
-                    const categoryExists = target.categories.some((cat: any) => cat.id === action.category.id);
-                    if (!categoryExists) {
-                        target.categories.push(action.category);
-                    }
-                    product.masterData.hasStagedChanges = staged;
-                    break;
-
-                case "removeFromCategory":
-                    if (target.categories) {
-                        target.categories = target.categories.filter((cat: any) => cat.id !== action.category.id);
-                    }
-                    product.masterData.hasStagedChanges = staged;
-                    break;
-
-                case "addVariant":
-                    const newVariant: ProductVariant = {
-                        id: target.variants ? target.variants.length + 2 : 2,
-                        sku: action.sku,
-                        key: action.key,
-                        prices: action.prices || [],
-                        attributes: action.attributes || [],
-                        images: action.images || [],
-                        availability: { isOnStock: true, availableQuantity: 0 }
-                    };
-                    if (!target.variants) target.variants = [];
-                    target.variants.push(newVariant);
-                    product.masterData.hasStagedChanges = staged;
-                    break;
-
-                case "removeVariant":
-                    if (target.variants) {
-                        if (action.id) {
-                            target.variants = target.variants.filter((v: any) => v.id !== action.id);
-                        } else if (action.sku) {
-                            target.variants = target.variants.filter((v: any) => v.sku !== action.sku);
-                        }
-                    }
-                    product.masterData.hasStagedChanges = staged;
-                    break;
-
-                case "addPrice":
-                    const price: Price = {
-                        id: uuidv4(),
-                        ...action.price
-                    };
-                    let variant = action.variantId
-                        ? (action.variantId === 1 ? target.masterVariant : target.variants?.find((v: any) => v.id === action.variantId))
-                        : target.variants?.find((v: any) => v.sku === action.sku);
-
-                    if (variant) {
-                        if (!variant.prices) variant.prices = [];
-                        variant.prices.push(price);
+                switch (action.action) {
+                    case "changeName":
+                        (target as any).name = action.name;
                         product.masterData.hasStagedChanges = staged;
-                    }
-                    break;
+                        break;
 
-                case "removePrice":
-                    const removeFromVariant = (v: any) => {
-                        if (v.prices) {
-                            v.prices = v.prices.filter((p: any) => p.id !== action.priceId);
+                    case "changeSlug":
+                        (target as any).slug = action.slug;
+                        product.masterData.hasStagedChanges = staged;
+                        break;
+
+                    case "setDescription":
+                        (target as any).description = action.description;
+                        product.masterData.hasStagedChanges = staged;
+                        break;
+
+                    case "addToCategory":
+                        if (!target.categories) (target as any).categories = [];
+                        const categoryExists = target.categories.some((cat: any) => cat.id === action.category.id);
+                        if (!categoryExists) {
+                            target.categories.push(action.category as any);
                         }
+                        product.masterData.hasStagedChanges = staged;
+                        break;
+
+                    case "removeFromCategory":
+                        if (target.categories) {
+                            target.categories = target.categories.filter((cat: any) => cat.id !== action.category.id) as any;
+                        }
+                        product.masterData.hasStagedChanges = staged;
+                        break;
+
+                    case "addVariant":
+                        const newVariant: ProductVariant = {
+                            id: target.variants ? target.variants.length + 2 : 2,
+                            sku: action.sku,
+                            key: action.key,
+                            prices: action.prices || [],
+                            attributes: action.attributes || [],
+                            images: action.images || [],
+                            availability: { isOnStock: true, availableQuantity: 0 }
+                        };
+                        if (!target.variants) target.variants = [] as any;
+                        target.variants.push(newVariant);
+                        product.masterData.hasStagedChanges = staged;
+                        break;
+
+                    case "removeVariant":
+                        if (target.variants) {
+                            if (action.id) {
+                                target.variants = target.variants.filter((v: any) => v.id !== action.id) as any;
+                            } else if (action.sku) {
+                                target.variants = target.variants.filter((v: any) => v.sku !== action.sku) as any;
+                            }
+                        }
+                        product.masterData.hasStagedChanges = staged;
+                        break;
+
+                    case "addPrice":
+                        const price: Price = {
+                            id: uuidv4(),
+                            ...action.price
+                        };
+                        let variant = action.variantId
+                            ? (action.variantId === 1 ? target.masterVariant : target.variants?.find((v: any) => v.id === action.variantId))
+                            : target.variants?.find((v: any) => v.sku === action.sku);
+
+                        if (variant) {
+                            if (!variant.prices) variant.prices = [] as any;
+                            variant.prices.push(price);
+                            product.masterData.hasStagedChanges = staged;
+                        }
+                        break;
+
+                    case "removePrice":
+                        const removeFromVariant = (v: any) => {
+                            if (v.prices) {
+                                v.prices = v.prices.filter((p: any) => p.id !== action.priceId) as any;
+                            }
+                        };
+                        removeFromVariant(target.masterVariant);
+                        target.variants?.forEach(removeFromVariant);
+                        product.masterData.hasStagedChanges = staged;
+                        break;
+
+                    case "publish":
+                        product.masterData.current = product.masterData.staged || product.masterData.current;
+                        product.masterData.published = true;
+                        product.masterData.hasStagedChanges = false;
+                        break;
+
+                    case "unpublish":
+                        product.masterData.published = false;
+                        break;
+
+                    case "revertStagedChanges":
+                        product.masterData.staged = JSON.parse(JSON.stringify(product.masterData.current));
+                        product.masterData.hasStagedChanges = false;
+                        break;
+
+                    default:
+                        return { status: HTTP_STATUS.BAD_REQUEST, code: "InvalidAction", message: "Unknown action", data: null };
+                }
+            }
+
+            product.version += 1;
+            product.lastModifiedAt = new Date().toISOString();
+
+            try {
+                // Use atomic update to prevent race conditions
+                const updated = await Product.findOneAndUpdate(
+                    { ...query, version: version + retryCount },
+                    {
+                        $set: {
+                            masterData: product.masterData,
+                            version: product.version,
+                            lastModifiedAt: product.lastModifiedAt
+                        }
+                    },
+                    { new: true }
+                );
+
+                if (updated) {
+                    return { status: HTTP_STATUS.OK, code: "Success", data: ProductService.formatProduct(updated) };
+                }
+
+                // If update failed, retry
+                retryCount++;
+                if (retryCount >= maxRetries) {
+                    return {
+                        status: HTTP_STATUS.CONFLICT,
+                        code: "ConcurrentModification",
+                        message: "Failed to update after multiple retries due to concurrent modifications",
+                        data: null
                     };
-                    removeFromVariant(target.masterVariant);
-                    target.variants?.forEach(removeFromVariant);
-                    product.masterData.hasStagedChanges = staged;
-                    break;
-
-                case "publish":
-                    product.masterData.current = product.masterData.staged || product.masterData.current;
-                    product.masterData.published = true;
-                    product.masterData.hasStagedChanges = false;
-                    break;
-
-                case "unpublish":
-                    product.masterData.published = false;
-                    break;
-
-                case "revertStagedChanges":
-                    product.masterData.staged = JSON.parse(JSON.stringify(product.masterData.current));
-                    product.masterData.hasStagedChanges = false;
-                    break;
-
-                default:
-                    return { status: HTTP_STATUS.BAD_REQUEST, code: "InvalidAction", message: "Unknown action", data: null };
+                }
+            } catch (error: any) {
+                if (error.code === 11000) { // Duplicate key error
+                    return {
+                        status: HTTP_STATUS.CONFLICT,
+                        code: "ConcurrentModification",
+                        message: "Concurrent modification detected",
+                        data: null
+                    };
+                }
+                throw error;
             }
         }
 
-        product.version += 1;
-        product.lastModifiedAt = new Date().toISOString();
-        await product.save();
-
-        return { status: HTTP_STATUS.OK, code: "Success", data: ProductService.formatProduct(product) };
+        return {
+            status: HTTP_STATUS.CONFLICT,
+            code: "ConcurrentModification",
+            message: "Max retries exceeded",
+            data: null
+        };
     }
 
     static async checkProductExistsById(productId: string): Promise<ServiceResponse<string | null>> {
@@ -412,6 +496,206 @@ class ProductService {
                 productCount: typeof totalRes.data === 'number' ? totalRes.data : 0
             }
         };
+    }
+
+    // New optimized query methods
+
+    static async getProductBySku(sku: string): Promise<ServiceResponse<ProductBody | null>> {
+        // Use indexed query for SKU lookup
+        const result = await Product.findOne({
+            $or: [
+                { 'masterData.current.masterVariant.sku': sku },
+                { 'masterData.current.variants.sku': sku }
+            ]
+        }).lean();
+
+        if (result) {
+            return { status: HTTP_STATUS.OK, code: "Success", data: ProductService.formatProduct(result) };
+        }
+        return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Product not found", data: null };
+    }
+
+    static async getProductsByPriceRange(
+        minPrice: number,
+        maxPrice: number,
+        currencyCode: string = 'USD',
+        page = 1,
+        pageSize = 10
+    ): Promise<ServiceResponse<any>> {
+        const limit = pageSize > 0 ? pageSize : 10;
+        const offset = page > 0 ? (page - 1) * limit : 0;
+
+        // Use aggregation pipeline for efficient price range queries
+        const pipeline = [
+            {
+                $match: {
+                    $or: [
+                        {
+                            'masterData.current.masterVariant.prices': {
+                                $elemMatch: {
+                                    'value.centAmount': { $gte: minPrice, $lte: maxPrice },
+                                    'value.currencyCode': currencyCode
+                                }
+                            }
+                        },
+                        {
+                            'masterData.current.variants.prices': {
+                                $elemMatch: {
+                                    'value.centAmount': { $gte: minPrice, $lte: maxPrice },
+                                    'value.currencyCode': currencyCode
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    version: 1,
+                    key: 1,
+                    'masterData.current.name': 1,
+                    'masterData.current.slug': 1,
+                    'masterData.current.masterVariant.prices': 1,
+                    'masterData.current.masterVariant.sku': 1,
+                    'masterData.published': 1
+                }
+            },
+            { $skip: offset },
+            { $limit: limit }
+        ];
+
+        const products = await Product.aggregate(pipeline);
+        const countPipeline = pipeline.slice(0, 1); // Only match stage for count
+        const totalCount = await Product.aggregate([...countPipeline, { $count: 'total' }]);
+        const total = totalCount.length > 0 ? totalCount[0].total : 0;
+        const totalPages = limit ? Math.ceil(total / limit) : 0;
+
+        return {
+            status: HTTP_STATUS.OK,
+            code: "Success",
+            data: {
+                page,
+                pageSize: products.length,
+                totalPages,
+                total,
+                results: products.map(ProductService.formatProduct)
+            }
+        };
+    }
+
+    static async getProductsByCategory(
+        categoryId: string,
+        page = 1,
+        pageSize = 10
+    ): Promise<ServiceResponse<any>> {
+        const limit = pageSize > 0 ? pageSize : 10;
+        const offset = page > 0 ? (page - 1) * limit : 0;
+
+        // Optimized query with projection
+        const products = await Product.find(
+            { 'masterData.current.categories.id': categoryId },
+            {
+                _id: 1,
+                version: 1,
+                key: 1,
+                'masterData.current.name': 1,
+                'masterData.current.slug': 1,
+                'masterData.current.masterVariant': 1,
+                'masterData.published': 1
+            }
+        )
+            .sort({ createdAt: -1 })
+            .skip(offset)
+            .limit(limit)
+            .lean()
+            .exec();
+
+        const total = await Product.countDocuments({ 'masterData.current.categories.id': categoryId });
+        const totalPages = limit ? Math.ceil(total / limit) : 0;
+
+        return {
+            status: HTTP_STATUS.OK,
+            code: "Success",
+            data: {
+                page,
+                pageSize: products.length,
+                totalPages,
+                total,
+                results: products.map(ProductService.formatProduct)
+            }
+        };
+    }
+
+    static async updateProductPrice(
+        productId: string,
+        variantId: number,
+        priceId: string,
+        newPrice: { centAmount: number; currencyCode: string }
+    ): Promise<ServiceResponse<boolean>> {
+        // Atomic price update without loading entire document
+        const variantPath = variantId === 1
+            ? 'masterData.current.masterVariant.prices'
+            : 'masterData.current.variants.$.prices';
+
+        const query = variantId === 1
+            ? { _id: productId }
+            : { _id: productId, 'masterData.current.variants.id': variantId };
+
+        const result = await Product.updateOne(
+            { ...query, [`${variantPath}.id`]: priceId },
+            {
+                $set: {
+                    [`${variantPath}.$.value`]: newPrice,
+                    lastModifiedAt: new Date().toISOString()
+                },
+                $inc: { version: 1 }
+            }
+        );
+
+        if (result.modifiedCount === 1) {
+            return { status: HTTP_STATUS.OK, code: "Success", data: true };
+        }
+        return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", data: false };
+    }
+
+    static async updateVariantStock(
+        productId: string,
+        sku: string,
+        availableQuantity: number,
+        isOnStock: boolean
+    ): Promise<ServiceResponse<boolean>> {
+        // Atomic stock update for high-frequency inventory changes
+        const result = await Product.updateOne(
+            {
+                _id: productId,
+                $or: [
+                    { 'masterData.current.masterVariant.sku': sku },
+                    { 'masterData.current.variants.sku': sku }
+                ]
+            },
+            {
+                $set: {
+                    'masterData.current.masterVariant.$[master].availability.availableQuantity': availableQuantity,
+                    'masterData.current.masterVariant.$[master].availability.isOnStock': isOnStock,
+                    'masterData.current.variants.$[variant].availability.availableQuantity': availableQuantity,
+                    'masterData.current.variants.$[variant].availability.isOnStock': isOnStock,
+                    lastModifiedAt: new Date().toISOString()
+                },
+                $inc: { version: 1 }
+            },
+            {
+                arrayFilters: [
+                    { 'master.sku': sku },
+                    { 'variant.sku': sku }
+                ]
+            }
+        );
+
+        if (result.modifiedCount >= 1) {
+            return { status: HTTP_STATUS.OK, code: "Success", data: true };
+        }
+        return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", data: false };
     }
 }
 

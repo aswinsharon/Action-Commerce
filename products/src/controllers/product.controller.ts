@@ -205,6 +205,94 @@ class ProductController {
         }
         return null;
     }
+
+    @LogMethod('DEBUG')
+    async getProductBySku(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { sku } = req.params;
+        try {
+            const result = await productService.getProductBySku(sku);
+            if (result.code === "ResourceNotFound") {
+                return res.status(HTTP_STATUS.NOT_FOUND).json(new ErrorResponse(
+                    HTTP_STATUS.NOT_FOUND,
+                    `The Product with SKU '${sku}' was not found.`,
+                    "ResourceNotFound"
+                ));
+            }
+            res.status(HTTP_STATUS.OK).json(new Response(result));
+        } catch (error) {
+            next(error);
+        }
+        return null;
+    }
+
+    @LogMethod('DEBUG')
+    async getProductsByPriceRange(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { minPrice, maxPrice, currencyCode = 'USD', page, pageSize } = req.query;
+        try {
+            if (!minPrice || !maxPrice) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(
+                    HTTP_STATUS.BAD_REQUEST,
+                    "minPrice and maxPrice query parameters are required",
+                    "InvalidInput"
+                ));
+            }
+            const result = await productService.getProductsByPriceRange(
+                parseInt(minPrice as string, 10),
+                parseInt(maxPrice as string, 10),
+                currencyCode as string,
+                page ? parseInt(page as string, 10) : 1,
+                pageSize ? parseInt(pageSize as string, 10) : 10
+            );
+            res.status(HTTP_STATUS.OK).json(new Response(result));
+        } catch (error) {
+            next(error);
+        }
+        return null;
+    }
+
+    @LogMethod('DEBUG')
+    async getProductsByCategory(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { categoryId } = req.params;
+        const { page, pageSize } = req.query;
+        try {
+            const result = await productService.getProductsByCategory(
+                categoryId,
+                page ? parseInt(page as string, 10) : 1,
+                pageSize ? parseInt(pageSize as string, 10) : 10
+            );
+            res.status(HTTP_STATUS.OK).json(new Response(result));
+        } catch (error) {
+            next(error);
+        }
+        return null;
+    }
+
+    @LogMethod('DEBUG')
+    async updateVariantStock(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const { id, sku } = req.params;
+        const { availableQuantity, isOnStock } = req.body;
+        try {
+            if (availableQuantity === undefined || isOnStock === undefined) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json(new ErrorResponse(
+                    HTTP_STATUS.BAD_REQUEST,
+                    "availableQuantity and isOnStock are required",
+                    "InvalidInput"
+                ));
+            }
+            const result = await productService.updateVariantStock(id, sku, availableQuantity, isOnStock);
+            if (result.code === "ResourceNotFound") {
+                return res.status(HTTP_STATUS.NOT_FOUND).json(new ErrorResponse(
+                    HTTP_STATUS.NOT_FOUND,
+                    `Product or variant not found`,
+                    "ResourceNotFound"
+                ));
+            }
+            res.status(HTTP_STATUS.OK).json(new Response(result));
+        } catch (error) {
+            next(error);
+        }
+        return null;
+    }
 }
 
 export const productController = new ProductController();

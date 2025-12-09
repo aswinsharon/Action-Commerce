@@ -7,12 +7,10 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging middleware
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
@@ -22,9 +20,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// JWT Authentication Middleware
+/**
+ * Middleware to authenticate JWT tokens.
+ * Skips authentication for public endpoints.
+ * 
+ * @param {import('express').Request} req - Express request object
+ * @param {import('express').Response} res - Express response object
+ * @param {import('express').NextFunction} next - Express next function
+ */
 const authenticateToken = (req, res, next) => {
-    // Skip auth for public endpoints
     const publicEndpoints = ['/health', '/health/services', '/api', '/api/auth/login', '/api/auth/register'];
     if (publicEndpoints.includes(req.path) || req.path.startsWith('/api/auth/')) {
         return next();
@@ -69,7 +73,10 @@ const authenticateToken = (req, res, next) => {
 // Apply authentication middleware globally
 app.use(authenticateToken);
 
-// Health check endpoint
+/**
+ * Health check endpoint to verify API Gateway status.
+ * @route GET /health
+ */
 app.get('/health', (req, res) => {
     res.json({
         status: 'OK',
@@ -79,7 +86,11 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Service health check endpoint
+/**
+ * Service health check endpoint.
+ * Pings all downstream services to check their availability.
+ * @route GET /health/services
+ */
 app.get('/health/services', async (req, res) => {
     const healthChecks = await Promise.allSettled(
         Object.entries(services).map(async ([name, config]) => {
@@ -130,7 +141,13 @@ const services = {
     }
 };
 
-// Common proxy options
+/**
+ * Creates proxy options for a specific service.
+ * 
+ * @param {string} serviceName - Name of the service
+ * @param {Object} config - Service configuration object
+ * @returns {Object} Proxy middleware options
+ */
 const createProxyOptions = (serviceName, config) => ({
     target: config.target,
     changeOrigin: true,
@@ -153,15 +170,12 @@ const createProxyOptions = (serviceName, config) => ({
     onProxyReq: (proxyReq, req, res) => {
         console.log(`[PROXY] ${req.method} ${req.originalUrl} -> ${config.target}${req.url}`);
 
-        // Forward important headers
         if (req.headers['x-client-id']) {
             proxyReq.setHeader('x-client-id', req.headers['x-client-id']);
         }
         if (req.headers['authorization']) {
             proxyReq.setHeader('authorization', req.headers['authorization']);
         }
-
-        // Forward user info headers (set by auth middleware)
         if (req.headers['x-user-id']) {
             proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
         }
@@ -172,7 +186,6 @@ const createProxyOptions = (serviceName, config) => ({
             proxyReq.setHeader('x-user-role', req.headers['x-user-role']);
         }
 
-        // Handle body for POST/PUT/PATCH
         if (req.body && Object.keys(req.body).length > 0) {
             const bodyData = JSON.stringify(req.body);
             proxyReq.setHeader('Content-Type', 'application/json');
@@ -185,13 +198,11 @@ const createProxyOptions = (serviceName, config) => ({
     }
 });
 
-// Create proxy middleware for each service with /api prefix
 Object.keys(services).forEach(serviceName => {
     const config = services[serviceName];
     app.use(`/api/${serviceName}`, createProxyMiddleware(createProxyOptions(serviceName, config)));
 });
 
-// API documentation endpoint
 app.get('/api', (req, res) => {
     res.json({
         message: 'Action Commerce API Gateway',
@@ -225,7 +236,6 @@ app.use((req, res) => {
     });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
     console.error('[ERROR]', err);
     res.status(err.status || 500).json({
@@ -250,7 +260,10 @@ const server = app.listen(PORT, () => {
     console.log('\n');
 });
 
-// Graceful shutdown
+/**
+ * Gracefully shuts down the API Gateway.
+ * Closes the server and exits the process.
+ */
 const gracefulShutdown = () => {
     console.log('\nShutting down API Gateway...');
     server.close(() => {
