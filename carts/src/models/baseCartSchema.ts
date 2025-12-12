@@ -23,136 +23,6 @@ const referenceSchema = new Schema({
     }
 }, { _id: false });
 
-const imageSchema = new Schema({
-    url: {
-        type: String,
-        required: true
-    },
-    label: {
-        type: String,
-        required: false
-    },
-    dimensions: {
-        w: { type: Number, required: true },
-        h: { type: Number, required: true }
-    }
-}, { _id: false });
-
-const attributeSchema = new Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    value: {
-        type: Schema.Types.Mixed,
-        required: true
-    }
-}, { _id: false });
-
-const productVariantSchema = new Schema({
-    id: {
-        type: Number,
-        required: true
-    },
-    sku: {
-        type: String,
-        required: false
-    },
-    key: {
-        type: String,
-        required: false
-    },
-    attributes: {
-        type: [attributeSchema],
-        required: false
-    },
-    images: {
-        type: [imageSchema],
-        required: false
-    }
-}, { _id: false });
-
-const priceSchema = new Schema({
-    value: {
-        type: moneySchema,
-        required: true
-    },
-    discounted: {
-        value: {
-            type: moneySchema,
-            required: false
-        },
-        discount: {
-            type: referenceSchema,
-            required: false
-        }
-    }
-}, { _id: false });
-
-const lineItemSchema = new Schema({
-    id: {
-        type: String,
-        default: uuidv4,
-        required: true
-    },
-    productId: {
-        type: String,
-        required: true
-    },
-    productType: {
-        type: referenceSchema,
-        required: true
-    },
-    name: {
-        type: Map,
-        of: String,
-        required: true
-    },
-    variant: {
-        type: productVariantSchema,
-        required: true
-    },
-    quantity: {
-        type: Number,
-        required: true,
-        min: 1
-    },
-    price: {
-        type: priceSchema,
-        required: true
-    },
-    totalPrice: {
-        type: moneySchema,
-        required: true
-    }
-}, { _id: false });
-
-const customLineItemSchema = new Schema({
-    id: {
-        type: String,
-        default: uuidv4,
-        required: true
-    },
-    name: {
-        type: Map,
-        of: String,
-        required: true
-    },
-    money: {
-        type: moneySchema,
-        required: true
-    },
-    quantity: {
-        type: Number,
-        required: true,
-        min: 1
-    },
-    totalPrice: {
-        type: moneySchema,
-        required: true
-    }
-}, { _id: false });
-
 const taxPortionSchema = new Schema({
     rate: {
         type: Number,
@@ -225,7 +95,7 @@ const discountCodeInfoSchema = new Schema({
     }
 }, { _id: false });
 
-const cartSchema = new Schema({
+const baseCartSchema = new Schema({
     _id: {
         type: String,
         default: uuidv4,
@@ -266,14 +136,6 @@ const cartSchema = new Schema({
         type: taxedPriceSchema,
         required: false
     },
-    lineItems: {
-        type: [lineItemSchema],
-        default: []
-    },
-    customLineItems: {
-        type: [customLineItemSchema],
-        default: []
-    },
     cartState: {
         type: String,
         enum: ["Active", "Merged", "Ordered"],
@@ -309,6 +171,6 @@ const cartSchema = new Schema({
     }
 });
 
-const Cart = mongoose.model('Cart', cartSchema);
+const BaseCart = mongoose.model('BaseCart', baseCartSchema);
 
-export default Cart;
+export default BaseCart;
