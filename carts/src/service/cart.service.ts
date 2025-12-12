@@ -1,8 +1,11 @@
-import { buildCreateBodyObject, calculateTotalPrice } from '../common/utils/utilities';
-import Cart from '../models/cartSchema';
-import { CartBody, LineItem, Address, Money } from '../common/dtos/cart';
+import { buildCreateBodyObject } from '../common/utils/utilities';
+import BaseCart from '../models/baseCartSchema';
+import LineItem from '../models/lineItemSchema';
+import CustomLineItem from '../models/customLineItemSchema';
+import { CartBody, Address } from '../common/dtos/cart';
 import HTTP_STATUS from '../common/constants/httpStatus';
 import { v4 as uuidv4 } from 'uuid';
+import { CacheService } from '../common/services/cache.service';
 
 interface ServiceResponse<T> {
     status: number;
@@ -77,31 +80,101 @@ interface UpdateInfo {
 }
 
 class CartService {
-    static formatCart(doc: any) {
-        if (!doc) return null;
-        const obj = doc.toObject();
-        return new CartBody(obj);
+    private static cacheService = new CacheService();
+
+    static async initializeCache(): Promise<void> {
+        await CartService.cacheService.connect();
+    }
+
+    static formatCartFromAggregation(cartData: any): CartBody | null {
+        if (!cartData) return null;
+
+        // Transform line items to match the expected format
+        const formattedLineItems = (cartData.lineItems || []).map((item: any) => ({
+            id: item._id,
+            productId: item.productId,
+            productType: item.productType,
+            name: item.name,
+            variant: item.variant,
+            quantity: item.quantity,
+            price: item.price,
+            totalPrice: item.totalPrice
+        }));
+
+        // Transform custom line items to match the expected format
+        const formattedCustomLineItems = (cartData.customLineItems || []).map((item: any) => ({
+            id: item._id,
+            name: item.name,
+            money: item.money,
+            quantity: item.quantity,
+            totalPrice: item.totalPrice
+        }));
+
+        // Combine base cart with line items
+        const fullCartData = {
+            ...cartData,
+            lineItems: formattedLineItems,
+            customLineItems: formattedCustomLineItems
+        };
+
+        return new CartBody(fullCartData);
+    }
+
+    static getCartAggregationPipeline(matchStage: any, additionalStages: any[] = []): any[] {
+        return [
+            { $match: matchStage },
+            {
+                $lookup: {
+                    from: 'lineitems',
+                    localField: '_id',
+                    foreignField: 'cartId',
+                    as: 'lineItems'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'customlineitems',
+                    localField: '_id',
+                    foreignField: 'cartId',
+                    as: 'customLineItems'
+                }
+            },
+            ...additionalStages
+        ];
     }
 
     static async countCarts(): Promise<ServiceResponse<number>> {
-        const total = await Cart.countDocuments();
+        const total = await BaseCart.countDocuments();
         return { status: HTTP_STATUS.OK, code: "Success", data: total };
     }
 
     static async getAllCarts(page = 0, pageSize = 10, projection: any = null): Promise<ServiceResponse<any>> {
         const limit = pageSize > 0 ? pageSize : 10;
         const offset = page > 0 ? (page - 1) * limit : 0;
-        const carts = await Cart.find({}, projection || undefined)
-            .sort({ createdAt: -1 })
-            .skip(offset)
-            .limit(limit)
-            .exec();
-        const results = carts.map(CartService.formatCart);
+
+        // Use aggregation pipeline for efficient joining
+        const pipeline = CartService.getCartAggregationPipeline(
+            {}, // Match all carts
+            [
+                { $sort: { createdAt: -1 } },
+                { $skip: offset },
+                { $limit: limit }
+            ]
+        );
+
+        if (projection) {
+            pipeline.push({ $project: projection });
+        }
+
+        const carts = await BaseCart.aggregate(pipeline);
+        const results = carts.map(cart => CartService.formatCartFromAggregation(cart));
+
         const totalRes = await CartService.countCarts();
         const totalPages = totalRes.data && limit ? Math.ceil(totalRes.data / limit) : 0;
         if (page > totalPages && totalPages > 0) {
             page = totalPages;
         }
+
         return {
             status: HTTP_STATUS.OK,
             code: "Success",
@@ -110,32 +183,74 @@ class CartService {
     }
 
     static async getCartById(cartId: string): Promise<ServiceResponse<CartBody | null>> {
-        const result = await Cart.findOne({ _id: cartId });
-        if (result) {
-            return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(result) };
+        const cacheKey = CartService.cacheService.generateCartKey('id', cartId);
+
+        // Try cache first
+        const cached = await CartService.cacheService.get<CartBody>(cacheKey);
+        if (cached) {
+            return { status: HTTP_STATUS.OK, code: "Success", data: cached };
+        }
+
+        // Use aggregation pipeline for efficient joining
+        const pipeline = CartService.getCartAggregationPipeline({ _id: cartId });
+        const results = await BaseCart.aggregate(pipeline);
+
+        if (results.length > 0) {
+            const formattedCart = CartService.formatCartFromAggregation(results[0]);
+            // Cache for 30 minutes
+            await CartService.cacheService.set(cacheKey, formattedCart, 1800);
+            return { status: HTTP_STATUS.OK, code: "Success", data: formattedCart };
         }
         return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Cart not found", data: null };
     }
 
     static async getCartByKey(key: string): Promise<ServiceResponse<CartBody | null>> {
-        const result = await Cart.findOne({ key });
-        if (result) {
-            return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(result) };
+        const cacheKey = CartService.cacheService.generateCartKey('key', key);
+
+        // Try cache first
+        const cached = await CartService.cacheService.get<CartBody>(cacheKey);
+        if (cached) {
+            return { status: HTTP_STATUS.OK, code: "Success", data: cached };
+        }
+
+        // Use aggregation pipeline for efficient joining
+        const pipeline = CartService.getCartAggregationPipeline({ key });
+        const results = await BaseCart.aggregate(pipeline);
+
+        if (results.length > 0) {
+            const formattedCart = CartService.formatCartFromAggregation(results[0]);
+            // Cache for 30 minutes
+            await CartService.cacheService.set(cacheKey, formattedCart, 1800);
+            return { status: HTTP_STATUS.OK, code: "Success", data: formattedCart };
         }
         return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Cart not found", data: null };
     }
 
     static async getCartByCustomerId(customerId: string): Promise<ServiceResponse<CartBody | null>> {
-        const result = await Cart.findOne({ customerId, cartState: "Active" });
-        if (result) {
-            return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(result) };
+        const cacheKey = CartService.cacheService.generateCartKey('customer', customerId);
+
+        // Try cache first
+        const cached = await CartService.cacheService.get<CartBody>(cacheKey);
+        if (cached) {
+            return { status: HTTP_STATUS.OK, code: "Success", data: cached };
+        }
+
+        // Use aggregation pipeline for efficient joining
+        const pipeline = CartService.getCartAggregationPipeline({ customerId, cartState: "Active" });
+        const results = await BaseCart.aggregate(pipeline);
+
+        if (results.length > 0) {
+            const formattedCart = CartService.formatCartFromAggregation(results[0]);
+            // Cache for 15 minutes (shorter for active carts)
+            await CartService.cacheService.set(cacheKey, formattedCart, 900);
+            return { status: HTTP_STATUS.OK, code: "Success", data: formattedCart };
         }
         return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Cart not found", data: null };
     }
 
     static async createCart({ clientId, data }: CreateCartParams): Promise<ServiceResponse<CartBody | null>> {
         if (data.key) {
-            const existing = await Cart.findOne({ key: data.key });
+            const existing = await BaseCart.findOne({ key: data.key });
             if (existing) {
                 return {
                     status: HTTP_STATUS.BAD_REQUEST,
@@ -152,16 +267,38 @@ class CartService {
                 centAmount: 0,
                 currencyCode: data.currency
             },
-            lineItems: data.lineItems || [],
             cartState: "Active"
         };
 
         const createBody = buildCreateBodyObject({ clientId, data: cartData });
-        const result = await Cart.create(createBody);
+        const baseCart = await BaseCart.create(createBody);
+
+        // Create line items if provided
+        if (data.lineItems && data.lineItems.length > 0) {
+            const lineItemsToCreate = data.lineItems.map(item => ({
+                ...item,
+                cartId: baseCart._id,
+                createdAt: baseCart.createdAt,
+                lastModifiedAt: baseCart.lastModifiedAt
+            }));
+            await LineItem.insertMany(lineItemsToCreate);
+        }
+
+        // Invalidate related cache
+        if (data.customerId) {
+            await CartService.cacheService.del(CartService.cacheService.generateCartKey('customer', data.customerId));
+        }
+        await CartService.cacheService.delPattern('carts:list:*');
+
+        // Use aggregation to get the complete cart data
+        const pipeline = CartService.getCartAggregationPipeline({ _id: baseCart._id });
+        const results = await BaseCart.aggregate(pipeline);
+        const formattedCart = results.length > 0 ? CartService.formatCartFromAggregation(results[0]) : null;
+
         return {
             status: HTTP_STATUS.CREATED,
             code: "Success",
-            data: CartService.formatCart(result)
+            data: formattedCart
         };
     }
 
@@ -170,31 +307,73 @@ class CartService {
         if (version) {
             query.version = parseInt(version, 10);
         }
-        const response = await Cart.deleteOne(query);
-        if (response.deletedCount === 1) {
+
+        // Delete base cart and related items in a transaction-like manner
+        const baseCartResponse = await BaseCart.deleteOne(query);
+        if (baseCartResponse.deletedCount === 1) {
+            // Delete associated line items and custom line items
+            await Promise.all([
+                LineItem.deleteMany({ cartId }),
+                CustomLineItem.deleteMany({ cartId })
+            ]);
+
+            // Invalidate cache
+            await CartService.cacheService.delPattern(`cart:*:${cartId}*`);
+            await CartService.cacheService.delPattern('carts:list:*');
             return { status: HTTP_STATUS.NO_CONTENT, code: "Success", data: true };
         }
         return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", data: false };
     }
 
     static async deleteCartByKey(key: string, version?: string): Promise<ServiceResponse<boolean>> {
+        const baseCart = await BaseCart.findOne({ key });
+        if (!baseCart) {
+            return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", data: false };
+        }
+
         const query: any = { key };
         if (version) {
             query.version = parseInt(version, 10);
         }
-        const response = await Cart.deleteOne(query);
+
+        const response = await BaseCart.deleteOne(query);
         if (response.deletedCount === 1) {
+            // Delete associated line items and custom line items
+            await Promise.all([
+                LineItem.deleteMany({ cartId: baseCart._id }),
+                CustomLineItem.deleteMany({ cartId: baseCart._id })
+            ]);
+
+            // Invalidate cache
+            await CartService.cacheService.delPattern(`cart:*:${key}*`);
+            await CartService.cacheService.delPattern('carts:list:*');
             return { status: HTTP_STATUS.NO_CONTENT, code: "Success", data: true };
         }
         return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", data: false };
     }
 
     static async updateCartById(cartId: string, updateInfo: UpdateInfo): Promise<ServiceResponse<CartBody | null>> {
-        return CartService.updateCart({ _id: cartId }, updateInfo);
+        const result = await CartService.updateCart({ _id: cartId }, updateInfo);
+
+        // Invalidate cache on successful update
+        if (result.status === HTTP_STATUS.OK) {
+            await CartService.cacheService.delPattern(`cart:*:${cartId}*`);
+            await CartService.cacheService.delPattern('carts:list:*');
+        }
+
+        return result;
     }
 
     static async updateCartByKey(key: string, updateInfo: UpdateInfo): Promise<ServiceResponse<CartBody | null>> {
-        return CartService.updateCart({ key }, updateInfo);
+        const result = await CartService.updateCart({ key }, updateInfo);
+
+        // Invalidate cache on successful update
+        if (result.status === HTTP_STATUS.OK) {
+            await CartService.cacheService.delPattern(`cart:*:${key}*`);
+            await CartService.cacheService.delPattern('carts:list:*');
+        }
+
+        return result;
     }
 
     private static async updateCart(query: any, updateInfo: UpdateInfo): Promise<ServiceResponse<CartBody | null>> {
@@ -205,14 +384,22 @@ class CartService {
         }
 
         const action = actions[0];
-        let updateData: any = { lastModifiedAt: new Date().toISOString() };
+        const now = new Date().toISOString();
+        let updateData: any = { lastModifiedAt: now };
         let updateOperation: any = { $set: updateData, $inc: { version: 1 } };
 
         switch (action.action) {
             case "addLineItem":
-                // In real implementation, fetch product details from products service
+                // Find the base cart first
+                const baseCart = await BaseCart.findOne({ ...query, version });
+                if (!baseCart) {
+                    return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Cart not found", data: null };
+                }
+
+                // Create new line item
                 const lineItem = {
-                    id: uuidv4(),
+                    _id: uuidv4(),
+                    cartId: baseCart._id,
                     productId: action.productId,
                     productType: { typeId: "product-type", id: "default" },
                     name: { en: "Product Name" }, // Should be fetched from product service
@@ -229,119 +416,154 @@ class CartService {
                     totalPrice: {
                         centAmount: 1000 * action.quantity,
                         currencyCode: "USD"
-                    }
+                    },
+                    createdAt: now,
+                    lastModifiedAt: now
                 };
 
-                const addResult = await Cart.updateOne(
+                // Update base cart version and create line item
+                const addResult = await BaseCart.updateOne(
                     { ...query, version },
-                    {
-                        $push: { lineItems: lineItem },
-                        ...updateOperation
-                    }
+                    updateOperation
                 );
 
                 if (addResult.modifiedCount === 1) {
-                    const updated = await Cart.findOne(query);
-                    if (updated) {
-                        // Recalculate total price
-                        const totalPrice = calculateTotalPrice(updated.lineItems, updated.customLineItems);
-                        await Cart.updateOne({ _id: updated._id }, { $set: { totalPrice } });
-                        const final = await Cart.findOne(query);
-                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(final) };
+                    await LineItem.create(lineItem);
+
+                    // Recalculate total price
+                    await CartService.recalculateTotalPrice(baseCart._id);
+
+                    // Use aggregation to get updated cart
+                    const pipeline = CartService.getCartAggregationPipeline({ _id: baseCart._id });
+                    const results = await BaseCart.aggregate(pipeline);
+                    if (results.length > 0) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCartFromAggregation(results[0]) };
                     }
                 }
                 break;
 
             case "removeLineItem":
-                const removeResult = await Cart.updateOne(
+                const removeBaseCart = await BaseCart.findOne({ ...query, version });
+                if (!removeBaseCart) {
+                    return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Cart not found", data: null };
+                }
+
+                const removeResult = await BaseCart.updateOne(
                     { ...query, version },
-                    {
-                        $pull: { lineItems: { id: action.lineItemId } },
-                        ...updateOperation
-                    }
+                    updateOperation
                 );
 
                 if (removeResult.modifiedCount === 1) {
-                    const updated = await Cart.findOne(query);
-                    if (updated) {
-                        const totalPrice = calculateTotalPrice(updated.lineItems, updated.customLineItems);
-                        await Cart.updateOne({ _id: updated._id }, { $set: { totalPrice } });
-                        const final = await Cart.findOne(query);
-                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(final) };
+                    await LineItem.deleteOne({ _id: action.lineItemId, cartId: removeBaseCart._id });
+
+                    // Recalculate total price
+                    await CartService.recalculateTotalPrice(removeBaseCart._id);
+
+                    // Use aggregation to get updated cart
+                    const pipeline = CartService.getCartAggregationPipeline({ _id: removeBaseCart._id });
+                    const results = await BaseCart.aggregate(pipeline);
+                    if (results.length > 0) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCartFromAggregation(results[0]) };
                     }
                 }
                 break;
 
             case "changeLineItemQuantity":
-                const cart = await Cart.findOne({ ...query, version });
-                if (cart) {
-                    const lineItemIndex = cart.lineItems.findIndex((item: any) => item.id === action.lineItemId);
-                    if (lineItemIndex !== -1) {
-                        cart.lineItems[lineItemIndex].quantity = action.quantity;
-                        cart.lineItems[lineItemIndex].totalPrice.centAmount =
-                            cart.lineItems[lineItemIndex].price.value.centAmount * action.quantity;
-                        cart.version += 1;
-                        cart.lastModifiedAt = new Date().toISOString();
-                        const totalPrice = calculateTotalPrice(cart.lineItems, cart.customLineItems);
-                        cart.totalPrice = totalPrice;
-                        await cart.save();
-                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(cart) };
+                const changeBaseCart = await BaseCart.findOne({ ...query, version });
+                if (!changeBaseCart) {
+                    return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Cart not found", data: null };
+                }
+
+                const lineItemToUpdate = await LineItem.findOne({ _id: action.lineItemId, cartId: changeBaseCart._id });
+                if (lineItemToUpdate) {
+                    const newTotalPrice = lineItemToUpdate.price.value.centAmount * action.quantity;
+
+                    await Promise.all([
+                        BaseCart.updateOne({ ...query, version }, updateOperation),
+                        LineItem.updateOne(
+                            { _id: action.lineItemId, cartId: changeBaseCart._id },
+                            {
+                                $set: {
+                                    quantity: action.quantity,
+                                    'totalPrice.centAmount': newTotalPrice,
+                                    lastModifiedAt: now
+                                }
+                            }
+                        )
+                    ]);
+
+                    // Recalculate total price
+                    await CartService.recalculateTotalPrice(changeBaseCart._id);
+
+                    // Use aggregation to get updated cart
+                    const pipeline = CartService.getCartAggregationPipeline({ _id: changeBaseCart._id });
+                    const results = await BaseCart.aggregate(pipeline);
+                    if (results.length > 0) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCartFromAggregation(results[0]) };
                     }
                 }
                 break;
 
             case "setShippingAddress":
                 updateData.shippingAddress = action.address;
-                const shippingResult = await Cart.updateOne(
+                const shippingResult = await BaseCart.updateOne(
                     { ...query, version },
                     updateOperation
                 );
                 if (shippingResult.modifiedCount === 1) {
-                    const updated = await Cart.findOne(query);
-                    if (updated) {
-                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(updated) };
+                    // Use aggregation to get updated cart
+                    const pipeline = CartService.getCartAggregationPipeline(query);
+                    const results = await BaseCart.aggregate(pipeline);
+                    if (results.length > 0) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCartFromAggregation(results[0]) };
                     }
                 }
                 break;
 
             case "setBillingAddress":
                 updateData.billingAddress = action.address;
-                const billingResult = await Cart.updateOne(
+                const billingResult = await BaseCart.updateOne(
                     { ...query, version },
                     updateOperation
                 );
                 if (billingResult.modifiedCount === 1) {
-                    const updated = await Cart.findOne(query);
-                    if (updated) {
-                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(updated) };
+                    // Use aggregation to get updated cart
+                    const pipeline = CartService.getCartAggregationPipeline(query);
+                    const results = await BaseCart.aggregate(pipeline);
+                    if (results.length > 0) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCartFromAggregation(results[0]) };
                     }
                 }
                 break;
 
             case "setCustomerEmail":
                 updateData.customerEmail = action.email;
-                const emailResult = await Cart.updateOne(
+                const emailResult = await BaseCart.updateOne(
                     { ...query, version },
                     updateOperation
                 );
                 if (emailResult.modifiedCount === 1) {
-                    const updated = await Cart.findOne(query);
-                    if (updated) {
-                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(updated) };
+                    // Use aggregation to get updated cart
+                    const pipeline = CartService.getCartAggregationPipeline(query);
+                    const results = await BaseCart.aggregate(pipeline);
+                    if (results.length > 0) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCartFromAggregation(results[0]) };
                     }
                 }
                 break;
 
             case "setCartState":
                 updateData.cartState = action.state;
-                const stateResult = await Cart.updateOne(
+                const stateResult = await BaseCart.updateOne(
                     { ...query, version },
                     updateOperation
                 );
                 if (stateResult.modifiedCount === 1) {
-                    const updated = await Cart.findOne(query);
-                    if (updated) {
-                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCart(updated) };
+                    // Use aggregation to get updated cart
+                    const pipeline = CartService.getCartAggregationPipeline(query);
+                    const results = await BaseCart.aggregate(pipeline);
+                    if (results.length > 0) {
+                        return { status: HTTP_STATUS.OK, code: "Success", data: CartService.formatCartFromAggregation(results[0]) };
                     }
                 }
                 break;
@@ -350,7 +572,7 @@ class CartService {
                 return { status: HTTP_STATUS.BAD_REQUEST, code: "InvalidAction", message: "Unknown action", data: null };
         }
 
-        const existing = await Cart.findOne(query);
+        const existing = await BaseCart.findOne(query);
         if (existing) {
             return {
                 status: HTTP_STATUS.CONFLICT,
@@ -362,8 +584,40 @@ class CartService {
         return { status: HTTP_STATUS.NOT_FOUND, code: "ResourceNotFound", message: "Cart not found", data: null };
     }
 
+    private static async recalculateTotalPrice(cartId: string): Promise<void> {
+        // Use aggregation to calculate total price efficiently
+        const pipeline = [
+            { $match: { cartId } },
+            {
+                $group: {
+                    _id: null,
+                    totalCentAmount: { $sum: "$totalPrice.centAmount" }
+                }
+            }
+        ];
+
+        const [lineItemsTotal, customLineItemsTotal] = await Promise.all([
+            LineItem.aggregate(pipeline),
+            CustomLineItem.aggregate(pipeline)
+        ]);
+
+        const lineItemsCentAmount = lineItemsTotal.length > 0 ? lineItemsTotal[0].totalCentAmount : 0;
+        const customLineItemsCentAmount = customLineItemsTotal.length > 0 ? customLineItemsTotal[0].totalCentAmount : 0;
+
+        // Get currency from base cart
+        const baseCart = await BaseCart.findOne({ _id: cartId }, { totalPrice: 1 });
+        const currencyCode = baseCart?.totalPrice?.currencyCode || "USD";
+
+        const totalPrice = {
+            centAmount: lineItemsCentAmount + customLineItemsCentAmount,
+            currencyCode
+        };
+
+        await BaseCart.updateOne({ _id: cartId }, { $set: { totalPrice } });
+    }
+
     static async checkCartExistsById(cartId: string): Promise<ServiceResponse<string | null>> {
-        const result = await Cart.findOne({ _id: cartId });
+        const result = await BaseCart.findOne({ _id: cartId });
         if (result) {
             return { status: HTTP_STATUS.OK, code: "Success", data: result.lastModifiedAt };
         }
@@ -371,7 +625,7 @@ class CartService {
     }
 
     static async checkCartsExist(): Promise<ServiceResponse<{ lastUpdatedTime: string | undefined; cartCount: number }>> {
-        const latestCart = await Cart.findOne().sort({ lastModifiedAt: -1 });
+        const latestCart = await BaseCart.findOne().sort({ lastModifiedAt: -1 });
         const lastUpdatedTime = latestCart?.lastModifiedAt;
         const totalRes = await CartService.countCarts();
         return {
