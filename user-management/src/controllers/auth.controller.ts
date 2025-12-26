@@ -10,6 +10,12 @@ const logger = new Logger();
 class AuthController {
     async register(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
+            if (!req.body || Object.keys(req.body).length === 0) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json(
+                    new ErrorResponse(HTTP_STATUS.BAD_REQUEST, 'Request body is required', 'EmptyBody')
+                );
+            }
+
             const result = await AuthService.register(req.body);
 
             if (result.code === 'DuplicateValue') {
@@ -27,6 +33,13 @@ class AuthController {
 
     async login(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
+
+            if (!req.body || Object.keys(req.body).length === 0) {
+                return res.status(HTTP_STATUS.BAD_REQUEST).json(
+                    new ErrorResponse(HTTP_STATUS.BAD_REQUEST, 'Request body is required', 'EmptyBody')
+                );
+            }
+
             const result = await AuthService.login(req.body);
 
             if (result.code === 'InvalidCredentials') {
@@ -37,7 +50,6 @@ class AuthController {
 
             return res.status(HTTP_STATUS.OK).json(new Response(result));
         } catch (error) {
-            logger.error(`Login error: ${error}`);
             return next(error);
         }
     }
@@ -71,7 +83,6 @@ class AuthController {
                 });
             }
 
-            // Include clientId in response for logging/tracking
             const responseData = {
                 ...result.data,
                 clientId: clientId

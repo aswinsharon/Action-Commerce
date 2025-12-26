@@ -30,6 +30,14 @@ export class DatabaseConfig extends EventEmitter {
             password: POSTGRES_PASSWORD,
             dialect: 'postgres' as const,
             logging: (msg: string) => logger.debug(`[PostgreSQL] ${msg}`),
+            ...(process.env.NODE_ENV === 'dev' && {
+                dialectOptions: {
+                    ssl: {
+                        require: true,
+                        rejectUnauthorized: false
+                    }
+                }
+            }),
             pool: {
                 max: 10,
                 min: 0,

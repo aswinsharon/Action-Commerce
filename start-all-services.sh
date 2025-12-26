@@ -113,7 +113,7 @@ echo ""
 
 # Check service directories and dependencies
 echo -e "${YELLOW}Checking services...${NC}"
-SERVICES=("user-management" "products" "categories" "cartss" "api-gateway")
+SERVICES=("user-management" "products" "categories" "carts" "api-gateway")
 MISSING_DEPS=0
 
 for service in "${SERVICES[@]}"; do

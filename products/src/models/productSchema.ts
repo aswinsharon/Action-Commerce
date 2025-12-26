@@ -204,9 +204,7 @@ const productSchema = new Schema({
     },
     key: {
         type: String,
-        required: false,
-        unique: true,
-        sparse: true
+        required: false
     },
     productType: {
         type: referenceSchema,
@@ -269,7 +267,7 @@ const productSchema = new Schema({
 });
 
 // Indexes for better query performance
-productSchema.index({ key: 1 });
+productSchema.index({ key: 1 }, { unique: true, sparse: true });
 productSchema.index({ 'masterData.current.slug': 1 });
 productSchema.index({ 'masterData.current.categories.id': 1 });
 productSchema.index({ 'masterData.published': 1 });

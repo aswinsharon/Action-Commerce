@@ -131,7 +131,8 @@ interface UpdateInfo {
 class ProductService {
     static formatProduct(doc: any) {
         if (!doc) return null;
-        const obj = doc.toObject();
+        // Handle both lean documents (plain objects) and Mongoose documents
+        const obj = doc.toObject ? doc.toObject() : doc;
         return new ProductBody(obj);
     }
 
@@ -170,7 +171,6 @@ class ProductService {
             .sort({ createdAt: -1 })
             .skip(offset)
             .limit(limit)
-            .lean() // Use lean() for better performance when not modifying documents
             .exec();
 
         const results = products.map(ProductService.formatProduct);
@@ -507,7 +507,7 @@ class ProductService {
                 { 'masterData.current.masterVariant.sku': sku },
                 { 'masterData.current.variants.sku': sku }
             ]
-        }).lean();
+        });
 
         if (result) {
             return { status: HTTP_STATUS.OK, code: "Success", data: ProductService.formatProduct(result) };
@@ -608,7 +608,6 @@ class ProductService {
             .sort({ createdAt: -1 })
             .skip(offset)
             .limit(limit)
-            .lean()
             .exec();
 
         const total = await Product.countDocuments({ 'masterData.current.categories.id': categoryId });

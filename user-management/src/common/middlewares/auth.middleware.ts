@@ -15,8 +15,6 @@ export interface AuthenticatedRequest extends Request {
 
 const getJwtSecret = (): string => {
     const secret = process.env.JWT_SECRET;
-    console.log('Auth middleware - JWT_SECRET loaded:', secret ? 'Yes' : 'No');
-    console.log('Auth middleware - JWT_SECRET value:', secret);
     if (!secret) {
         throw new Error('JWT_SECRET environment variable is not defined');
     }
