@@ -8,6 +8,7 @@ export type LogLevel = 'INFO' | 'ERROR' | 'WARN' | 'DEBUG';
 export class Logger extends EventEmitter {
     private logFilePath: string;
     private configuredLogLevel: LogLevel;
+    private canWriteToFile: boolean = true;
     private levelPriority: Record<LogLevel, number> = {
         'DEBUG': 1,
         'INFO': 2,
@@ -19,11 +20,24 @@ export class Logger extends EventEmitter {
         super();
         this.configuredLogLevel = (process.env.LOG_LEVEL as LogLevel) || 'INFO';
         const logFileName = `log-${new Date().toISOString().replace(/[:.]/g, '-')}.log`;
-        const logDir = path.resolve(process.cwd(), 'src', 'logs');
-        if (!fs.existsSync(logDir)) {
-            fs.mkdirSync(logDir, { recursive: true });
+
+        const isServerless = process.env.SERVERLESS === 'true';
+        const logDir = isServerless
+            ? '/tmp'
+            : path.resolve(process.cwd(), 'src', 'logs');
+
+        try {
+            if (!isServerless && !fs.existsSync(logDir)) {
+                fs.mkdirSync(logDir, { recursive: true });
+            }
+            this.logFilePath = `${logDir}/${logFileName}`;
+
+            fs.appendFileSync(this.logFilePath, '');
+        } catch (error) {
+            console.warn(`Cannot write to log file: ${error}. Falling back to console-only logging.`);
+            this.canWriteToFile = false;
+            this.logFilePath = '';
         }
-        this.logFilePath = `${logDir}/${logFileName}`;
     }
 
     private getColor(level: LogLevel) {
@@ -51,7 +65,16 @@ export class Logger extends EventEmitter {
         const coloredLevel = color(`[${level}]`);
 
         const logMessage = `[${timestamp}] [${level}] [Memory: ${usedMemoryMB} MB] ${message}\n`;
-        fs.appendFileSync(this.logFilePath, logMessage);
+
+        // Only write to file if we can
+        if (this.canWriteToFile && this.logFilePath) {
+            try {
+                fs.appendFileSync(this.logFilePath, logMessage);
+            } catch (error) {
+                console.warn(`Failed to write to log file: ${error}`);
+                this.canWriteToFile = false;
+            }
+        }
 
         const consoleMessage = `[${timestamp}] ${coloredLevel} [Memory: ${usedMemoryMB} MB] ${message}`;
         console.log(consoleMessage);

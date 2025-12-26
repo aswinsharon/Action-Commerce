@@ -30,3 +30,6 @@ coverage/
 package-lock.json
 .env.local
 .env.*
+
+# test payloads
+*.payload.json
