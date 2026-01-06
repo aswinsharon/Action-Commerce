@@ -202,7 +202,7 @@ tell application "iTerm"
     create window with default profile
     tell current session of current window
         set name to "$service_name"
-        write text "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start"
+        write text "cd '$SCRIPT_DIR/$service_dir' && echo 'Starting $service_name...' && npm start"
     end tell
 end tell
 EOF
@@ -215,7 +215,7 @@ tell application "iTerm"
         create tab with default profile
         tell current session
             set name to "$service_name"
-            write text "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start"
+            write text "cd '$SCRIPT_DIR/$service_dir' && echo 'Starting $service_name...' && npm start"
         end tell
     end tell
 end tell
@@ -227,7 +227,7 @@ EOF
                 # First service: create new window
                 osascript <<EOF
 tell application "Terminal"
-    do script "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start"
+    do script "cd '$SCRIPT_DIR/$service_dir' && echo 'Starting $service_name...' && npm start"
     set custom title of front window to "$service_name"
     activate
 end tell
@@ -238,7 +238,7 @@ EOF
                 osascript <<EOF
 tell application "Terminal"
     tell front window
-        do script "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start" in (make new tab)
+        do script "cd '$SCRIPT_DIR/$service_dir' && echo 'Starting $service_name...' && npm start" in (make new tab)
         set custom title of current tab to "$service_name"
     end tell
 end tell
@@ -246,13 +246,13 @@ EOF
             fi
             ;;
         "gnome-terminal")
-            gnome-terminal --tab --title="$service_name" -- bash -c "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start; exec bash"
+            gnome-terminal --tab --title="$service_name" -- bash -c "cd '$SCRIPT_DIR/$service_dir' && echo 'Starting $service_name...' && npm start; exec bash"
             ;;
         "konsole")
-            konsole --new-tab -e bash -c "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start; exec bash"
+            konsole --new-tab -e bash -c "cd '$SCRIPT_DIR/$service_dir' && echo 'Starting $service_name...' && npm start; exec bash"
             ;;
         "xterm")
-            xterm -T "$service_name" -e "cd '$SCRIPT_DIR/$service_dir' && echo '🚀 Starting $service_name...' && npm start; bash" &
+            xterm -T "$service_name" -e "cd '$SCRIPT_DIR/$service_dir' && echo 'Starting $service_name...' && npm start; bash" &
             ;;
         *)
             echo -e "${YELLOW}⚠ Could not detect terminal. Starting in background...${NC}"

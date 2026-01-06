@@ -63,7 +63,7 @@ function loadServices() {
 let services = loadServices();
 fs.watchFile('services.json', () => {
     services = loadServices();
-    console.log('🔄 Service config reloaded');
+    console.log('Service config reloaded');
 });
 
 /**
@@ -198,7 +198,7 @@ function proxyWithFailover(req, res, pathKey, tried = []) {
     leastConnections[pathKey][index] = (leastConnections[pathKey][index] || 0) + 1;
 
     proxy.web(req, res, { target: `http://${target.host}:${target.port}` }, err => {
-        console.warn(`⚠️ Failed to reach ${target.host}:${target.port}. Retrying...`);
+        console.warn(`Failed to reach ${target.host}:${target.port}. Retrying...`);
         leastConnections[pathKey][index]--;
         tried.push(index);
         if (tried.length < MAX_RETRIES) {
@@ -348,9 +348,9 @@ let shuttingDown = false;
  */
 function gracefulShutdown(server) {
     shuttingDown = true;
-    console.log('🛑 Graceful shutdown initiated...');
+    console.log('Graceful shutdown initiated...');
     server.close(() => {
-        console.log('✅ Server closed');
+        console.log('Server closed');
         process.exit(0);
     });
 }
@@ -362,5 +362,5 @@ const server = sslOptions.key && sslOptions.cert
     : http.createServer(handleRequest);
 
 server.listen(8000, () => {
-    console.log(`🚀 API Gateway Load Balancer with Failover listening on ${sslOptions.key ? 'https' : 'http'}://localhost:8000`);
+    console.log(`API Gateway Load Balancer with Failover listening on ${sslOptions.key ? 'https' : 'http'}://localhost:8000`);
 });
