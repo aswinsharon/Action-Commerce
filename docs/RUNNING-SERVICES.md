@@ -173,11 +173,11 @@ npm start
 
 Expected output:
 ```
-🚀 API Gateway running on port 3000
-📍 Gateway URL: http://localhost:3000
-🏥 Health check: http://localhost:3000/health
+API Gateway running on port 3000
+Gateway URL: http://localhost:3000
+Health check: http://localhost:3000/health
 
-📦 Available services:
+  Available services:
    - auth         -> http://localhost:6001
    - users        -> http://localhost:6001
    - products     -> http://localhost:6002
@@ -194,7 +194,7 @@ npm start
 
 Expected output:
 ```
-🚀 API Gateway Load Balancer with Failover listening on http://localhost:8000
+ API Gateway Load Balancer with Failover listening on http://localhost:8000
 ```
 
 ## Method 3: Using Process Managers

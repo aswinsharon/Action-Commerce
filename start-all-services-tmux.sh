@@ -67,27 +67,27 @@ done
 tmux new-session -d -s $SESSION_NAME -n "user-mgmt" -c "$SCRIPT_DIR/user-management"
 
 # Send commands to first window
-tmux send-keys -t $SESSION_NAME:0 "echo '🚀 Starting User Management Service (Port 6001)...'" C-m
+tmux send-keys -t $SESSION_NAME:0 "echo 'Starting User Management Service (Port 6001)...'" C-m
 tmux send-keys -t $SESSION_NAME:0 "npm start" C-m
 
 # Create window for Products Service
 tmux new-window -t $SESSION_NAME:1 -n "products" -c "$SCRIPT_DIR/products"
-tmux send-keys -t $SESSION_NAME:1 "echo '🚀 Starting Products Service (Port 6002)...'" C-m
+tmux send-keys -t $SESSION_NAME:1 "echo 'Starting Products Service (Port 6002)...'" C-m
 tmux send-keys -t $SESSION_NAME:1 "npm start" C-m
 
 # Create window for Categories Service
 tmux new-window -t $SESSION_NAME:2 -n "categories" -c "$SCRIPT_DIR/categories"
-tmux send-keys -t $SESSION_NAME:2 "echo '🚀 Starting Categories Service (Port 6003)...'" C-m
+tmux send-keys -t $SESSION_NAME:2 "echo 'Starting Categories Service (Port 6003)...'" C-m
 tmux send-keys -t $SESSION_NAME:2 "npm start" C-m
 
 # Create window for Cart Service
 tmux new-window -t $SESSION_NAME:3 -n "cart" -c "$SCRIPT_DIR/cart"
-tmux send-keys -t $SESSION_NAME:3 "echo '🚀 Starting Cart Service (Port 6004)...'" C-m
+tmux send-keys -t $SESSION_NAME:3 "echo 'Starting Cart Service (Port 6004)...'" C-m
 tmux send-keys -t $SESSION_NAME:3 "npm start" C-m
 
 # Create window for API Gateway
 tmux new-window -t $SESSION_NAME:4 -n "gateway" -c "$SCRIPT_DIR/api-gateway"
-tmux send-keys -t $SESSION_NAME:4 "echo '🚀 Starting API Gateway (Port 3000)...'" C-m
+tmux send-keys -t $SESSION_NAME:4 "echo 'Starting API Gateway (Port 3000)...'" C-m
 tmux send-keys -t $SESSION_NAME:4 "npm start" C-m
 
 # Create window for monitoring/commands
