@@ -3,6 +3,7 @@ const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
+const cacheService = require('./cache.service');
 require('dotenv').config();
 
 const app = express();
@@ -77,7 +78,7 @@ app.use(authenticateToken);
  * Health check endpoint to verify API Gateway status.
  * @route GET /health
  */
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
     res.json({
         status: 'OK',
         message: 'API Gateway is running',

@@ -1,32 +1,36 @@
 # Action-Commerce
 
-A headless e-commerce platform built with microservices architecture featuring role-based authentication, product management, and shopping cart functionality.
+A headless e-commerce platform built with microservices architecture featuring role-based authentication, product management, shopping cart functionality, and **Redis caching** for optimal performance.
 
 ![Block Diagram](./docs/images/Architecture_Diagram.jpeg)
 
 ## Architecture Overview
 
-This project consists of 5 microservices:
+This project consists of 6 microservices with **Redis caching** implemented across all services:
 
-1. **API Gateway** (Port 3000) - Routes requests to appropriate microservices
-2. **User Management** (Port 6001) - Authentication, authorization, and user management using PostgreSQL
-3. **Products** (Port 6002) - Product catalog management using MongoDB
-4. **Categories** (Port 6003) - Product categories management using MongoDB
-5. **Cart** (Port 6004) - Shopping cart functionality using MongoDB
+1. **API Gateway** (Port 3000) - Routes requests to appropriate microservices with caching
+2. **User Management** (Port 6001) - Authentication, authorization, and user management using PostgreSQL + Redis
+3. **Products** (Port 6002) - Product catalog management using MongoDB + Redis
+4. **Categories** (Port 6003) - Product categories management using MongoDB + Redis
+5. **Cart** (Port 6004) - Shopping cart functionality using MongoDB + Redis
+6. **Payments** (Port 6005) - Payment processing using MongoDB + Redis
 
 ## Features
 
 - **Role-based Authentication**: Admin, Manager, and Customer roles
 - **JWT Token Authentication**: Secure API access
+- **Redis Caching**: High-performance caching across all microservices
 - **Database Optimization**: PostgreSQL for user data, MongoDB for product/cart data
 - **Microservices Architecture**: Independent, scalable services
 - **API Gateway**: Centralized routing and service discovery
+- **Cache Invalidation**: Smart cache management with TTL and pattern-based invalidation
 
 ## Prerequisites
 
 - Node.js (v18 or higher)
 - PostgreSQL (for user management)
-- MongoDB (for products, categories, and cart)
+- MongoDB (for products, categories, cart, and payments)
+- **Redis** (for caching across all services)
 - npm or yarn
 
 ## Quick Start
@@ -38,6 +42,9 @@ Use the provided bash scripts to start all services automatically:
 ```bash
 # Make scripts executable
 chmod +x start-all-services.sh stop-all-services.sh
+
+# Start Redis first (required for caching)
+redis-server
 
 # Start all services in new terminal windows
 ./start-all-services.sh
@@ -375,3 +382,77 @@ Each service can be deployed independently using the included `serverless.yml` c
 ## License
 
 ISC License
+
+## Redis Caching Implementation
+
+### Overview
+All microservices now include Redis caching for improved performance:
+
+- **Automatic Caching**: GET requests are automatically cached
+- **Smart Invalidation**: Cache is invalidated on data changes
+- **Service-Specific Keys**: Each service uses optimized cache key patterns
+- **Health Monitoring**: Cache health endpoints for monitoring
+- **Fault Tolerance**: Services work without Redis (degraded performance)
+
+### Quick Redis Setup
+
+```bash
+# Install Redis (macOS)
+brew install redis
+brew services start redis
+
+# Install Redis (Ubuntu)
+sudo apt install redis-server
+sudo systemctl start redis-server
+
+# Or use Docker
+docker run -d --name redis-cache -p 6379:6379 redis:alpine
+
+# Verify installation
+redis-cli ping  # Should return: PONG
+```
+
+### Configuration
+
+Copy environment files and configure Redis:
+
+```bash
+# For each service
+cp .env.example .env.local
+
+# Update Redis URL in .env.local
+REDIS_URL=redis://localhost:6379
+CACHE_TTL=3600  # 1 hour default
+```
+
+### Cache Monitoring
+
+Each service provides cache health endpoints:
+
+```bash
+# Check cache status
+GET http://localhost:6002/health/cache
+
+# Clear cache (admin only)
+DELETE http://localhost:6002/health/cache
+
+# Get cache statistics
+GET http://localhost:6002/health/cache/stats
+```
+
+### Performance Benefits
+
+- **Faster Response Times**: Cached data served in milliseconds
+- **Reduced Database Load**: Fewer database queries
+- **Better Scalability**: Handle more concurrent requests
+- **Improved User Experience**: Faster page loads and API responses
+
+For detailed Redis setup and configuration, see [REDIS-SETUP.md](./REDIS-SETUP.md).
+
+## Service Dependencies
+
+```
+Redis Server (Port 6379) ← All Services
+PostgreSQL (Port 5432) ← User Management
+MongoDB (Port 27017) ← Products, Categories, Cart, Payments
+```

@@ -8,6 +8,7 @@ import { DatabaseConfig } from './common/config/database.config';
 import { errorHandler } from './common/middlewares/errorHandler';
 import { Logger } from './common/loggers/logger';
 import { initUserModel } from './models/user.model';
+import { initializeCache, shutdownCache } from './common/middlewares/cache.middleware';
 
 dotenv.config();
 const app = express();
@@ -53,31 +54,77 @@ app.use('/users', userRoutes);
 // Error handler should be placed AFTER routes
 app.use(errorHandler);
 
-
-
 const PORT = process.env.PORT ? Number(process.env.PORT) : 6001;
 
 const initializeDatabase = async () => {
-    return new Promise<void>((resolve, reject) => {
-        dataBaseConfig.on("connected", async (sequelize) => {
-            try {
-                logger.info("PostgreSQL connected successfully!");
-                // Initialize User model with Sequelize instance
-                initUserModel(sequelize);
-                logger.info("User model initialized successfully!");
+    try {
+        await dataBaseConfig.connect();
+        await initUserModel();
+        await dataBaseConfig.syncDatabase();
+        logger.info('Database initialized successfully');
+    } catch (error) {
+        logger.error(`Database initialization failed: ${error}`);
+        throw error;
+    }
+};
 
-                // Sync database (create tables if they don't exist)
-                await sequelize.sync({ alter: true });
-                logger.info("Database synchronized successfully!");
-                resolve();
-            } catch (error) {
-                logger.error(`Database sync error: ${error}`);
-                reject(error);
-            }
-        });
+const startServer = async () => {
+    try {
+        await initializeDatabase();
+        await initializeCache();
 
-        dataBaseConfig.connect().catch(reject);
+        if (process.env.SERVERLESS !== 'true') {
+            app.listen(PORT, () => {
+                logger.info(`User Management service running on port ${PORT}`);
+            });
+        }
+    } catch (err) {
+        logger.error(`Failed to start server: ${err}`);
+        process.exit(1);
+    }
+};
+
+const gracefulShutdown = async () => {
+    logger.info("Shutting down server and closing connections...");
+    try {
+        await shutdownCache();
+        await dataBaseConfig.closeConnection();
+    } catch (err) {
+        logger.error(`Error during shutdown: ${err}`);
+    }
+    process.exit(0);
+};
+
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
+
+(async () => {
+    await startServer();
+})();
+
+if (process.env.SERVERLESS) {
+    exports.handler = serverless(app);
+}
+return new Promise<void>((resolve, reject) => {
+    dataBaseConfig.on("connected", async (sequelize) => {
+        try {
+            logger.info("PostgreSQL connected successfully!");
+            // Initialize User model with Sequelize instance
+            initUserModel(sequelize);
+            logger.info("User model initialized successfully!");
+
+            // Sync database (create tables if they don't exist)
+            await sequelize.sync({ alter: true });
+            logger.info("Database synchronized successfully!");
+            resolve();
+        } catch (error) {
+            logger.error(`Database sync error: ${error}`);
+            reject(error);
+        }
     });
+
+    dataBaseConfig.connect().catch(reject);
+});
 };
 
 const startServer = async () => {
