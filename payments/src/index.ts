@@ -6,6 +6,7 @@ import route from './routes/payment.route';
 import { DatabaseConfig } from './common/config/database.config';
 import { errorHandler } from './common/middlewares/errorHandler';
 import { Logger } from './common/loggers/logger';
+import { initializeCache, shutdownCache } from './common/middlewares/cache.middleware';
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,7 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 6005;
 const startServer = async () => {
     try {
         await dataBaseConfig.connect();
+        await initializeCache();
         app.listen(PORT, () => {
             logger.info(`Payments service running on port ${PORT}`);
         });
@@ -37,11 +39,12 @@ const startServer = async () => {
 };
 
 const gracefulShutdown = async () => {
-    logger.info("Shutting down server and closing MongoDB connection...");
+    logger.info("Shutting down server and closing connections...");
     try {
+        await shutdownCache();
         await dataBaseConfig.closeConnection();
     } catch (err) {
-        logger.error(`Error during MongoDB shutdown: ${err}`);
+        logger.error(`Error during shutdown: ${err}`);
     }
     process.exit(0);
 };

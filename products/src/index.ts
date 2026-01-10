@@ -3,9 +3,11 @@ import cors from 'cors';
 import serverless from "serverless-http";
 import dotenv from 'dotenv';
 import route from './routes/product.route';
+import healthRoute from './routes/health.route';
 import { DatabaseConfig } from './common/config/database.config';
 import { errorHandler } from './common/middlewares/errorHandler';
 import { Logger } from './common/loggers/logger';
+import { initializeCache, shutdownCache } from './common/middlewares/cache.middleware';
 
 dotenv.config();
 const app = express();
@@ -17,6 +19,7 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(errorHandler);
 app.use('/products', route);
+app.use('/health', healthRoute);
 
 dataBaseConfig.on("connected", () => {
     logger.info("MongoDB connected successfully!");
@@ -27,6 +30,7 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 6002;
 const startServer = async () => {
     try {
         await dataBaseConfig.connect();
+        await initializeCache();
         app.listen(PORT, () => {
             logger.info(`Products service running on port ${PORT}`);
         });
@@ -37,11 +41,12 @@ const startServer = async () => {
 };
 
 const gracefulShutdown = async () => {
-    logger.info("Shutting down server and closing MongoDB connection...");
+    logger.info("Shutting down server and closing connections...");
     try {
+        await shutdownCache();
         await dataBaseConfig.closeConnection();
     } catch (err) {
-        logger.error(`Error during MongoDB shutdown: ${err}`);
+        logger.error(`Error during shutdown: ${err}`);
     }
     process.exit(0);
 };
