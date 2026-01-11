@@ -149,7 +149,7 @@
       ]
     },
     {
-      "name": "💳 Payments",
+      "name": "Payments",
       "item": [
         {
           "name": "Query Payments",
@@ -353,7 +353,7 @@
       ]
     },
     {
-      "name": "🛒 Carts",
+      "name": "Carts",
       "item": [
         {
           "name": "Query Carts",
@@ -545,7 +545,7 @@
       ]
     },
     {
-      "name": "🛍️ Products",
+      "name": "Products",
       "item": [
         {
           "name": "Query Products",
@@ -714,7 +714,7 @@
       ]
     },
     {
-      "name": "📂 Categories",
+      "name": "Categories",
       "item": [
         {
           "name": "Query Categories",
