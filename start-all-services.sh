@@ -94,6 +94,11 @@ if check_port 6004; then
     PORTS_IN_USE=1
 fi
 
+if check_port 6005; then
+    echo -e "${YELLOW} Port 6005 (Payments) is already in use${NC}"
+    PORTS_IN_USE=1
+fi
+
 if check_port 3000; then
     echo -e "${YELLOW} Port 3000 (API Gateway) is already in use${NC}"
     PORTS_IN_USE=1
@@ -113,7 +118,7 @@ echo ""
 
 # Check service directories and dependencies
 echo -e "${YELLOW}Checking services...${NC}"
-SERVICES=("user-management" "products" "categories" "carts" "api-gateway")
+SERVICES=("user-management" "products" "categories" "carts" "payments" "api-gateway")
 MISSING_DEPS=0
 
 for service in "${SERVICES[@]}"; do
@@ -279,6 +284,7 @@ start_service "User Management" "user-management" "6001"
 start_service "Products Service" "products" "6002"
 start_service "Categories Service" "categories" "6003"
 start_service "carts Service" "carts" "6004"
+start_service "Payments Service" "payments" "6005"
 start_service "API Gateway" "api-gateway" "3000"
 
 echo ""
@@ -291,6 +297,7 @@ echo -e "  ${GREEN}•${NC} User Management:  http://localhost:6001"
 echo -e "  ${GREEN}•${NC} Products:         http://localhost:6002"
 echo -e "  ${GREEN}•${NC} Categories:       http://localhost:6003"
 echo -e "  ${GREEN}•${NC} carts:             http://localhost:6004"
+echo -e "  ${GREEN}•${NC} Payments:         http://localhost:6005"
 echo -e "  ${GREEN}•${NC} API Gateway:      http://localhost:3000"
 echo ""
 echo -e "${BLUE}Health Check:${NC}"
@@ -307,4 +314,3 @@ if [ "$TERMINAL_TYPE" == "unknown" ]; then
     echo -e "${YELLOW}To stop services, run: ./stop-all-services.sh${NC}"
 fi
 
-echo -e "${GREEN}Happy coding! 🎉${NC}"
